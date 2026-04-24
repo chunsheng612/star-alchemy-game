@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="星辰煉金">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#fce8db">
+    <meta name="description" content="在魔法工坊中完成委託、提煉配方並升格的煉金解謎遊戲。">
+    <title>星辰煉金學苑：邊境實習</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="assets/pwa/apple-touch-icon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="particles-container"></div>
+
+    <div id="app-container">
+        
+        <!-- 自動存檔提示 (Toast) -->
+        <div id="save-toast" class="hidden">
+            <span class="toast-icon">💾</span> 紀錄已同步
+        </div>
+
+        <!-- 主線挑戰委託任務 UI -->
+        <div id="quest-widget" class="hidden">
+            <div class="quest-icon">📜</div>
+            <div class="quest-info">
+                <div class="quest-title">公會考核</div>
+                <div class="quest-desc" id="quest-desc">通關一次</div>
+            </div>
+            <div class="quest-claim" id="btn-quest-claim">領取</div>
+        </div>
+
+        <!-- 劇情對話系統 (Dialogue Overlay) -->
+        <div id="dialogue-overlay">
+            <div class="dialogue-character">
+                <img src="assets/char_alchemist.png" alt="Iris">
+            </div>
+            <div class="dialogue-box">
+                <h3 class="dialogue-name">艾莉絲</h3>
+                <p class="dialogue-text" id="dialogue-text">...</p>
+                <div class="dialogue-continue">點擊繼續 <span>▼</span></div>
+            </div>
+        </div>
+
+        <!-- 通用頂部列 (Map & Shop) -->
+        <div id="global-header" class="hidden">
+            <button id="btn-global-back" class="icon-btn">◀ 返回大廳</button>
+            <div class="header-title" id="header-title">邊境據點</div>
+            <div class="stats-combo">
+                <div class="stamina-display"><img src="assets/icons/potion_red.png" alt="E" style="width:18px"><span id="global-stamina">100</span></div>
+                <div class="coin-display">
+                    <img src="assets/icons/coin.png" alt="Coin">
+                    <span id="global-coins">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= VIEW: 首頁 (HUB) ================= -->
+        <section id="view-hub" class="view-section active-view">
+            <div class="hub-content">
+                <div class="logo-box">
+                    <h1>星辰煉金學苑<br><span class="sub-title">邊境實習</span></h1>
+                    <p>精準備妥委託人的需求，是煉金術師的基礎。</p>
+                </div>
+                
+                <div class="menu-buttons">
+                    <button class="menu-btn primary-btn" onclick="app.showLocation('map')">
+                        <span class="btn-icon">📜</span> 開始遊戲
+                    </button>
+                    <!-- 無限挑戰初期完全隱藏 -->
+                    <button id="btn-endless" class="menu-btn endless-btn real-hidden" onclick="app.startEndless()">
+                        <span class="btn-icon">♾️</span> 無限挑戰
+                    </button>
+                    <button class="menu-btn shop-btn" onclick="app.showLocation('shop')">
+                        <span class="btn-icon">🏪</span> 開啟商店
+                    </button>
+                </div>
+
+                <div id="hub-stamina-tip" class="hub-tip hidden">
+                    <span id="hub-tip-text">開始委託需要體力。</span>
+                    <button id="btn-hub-tip-shop" class="hub-tip-btn">前往商店補給</button>
+                </div>
+
+                <div id="auth-card" class="hub-tip">
+                    <div id="auth-guest">
+                        <span>登入後可保留玩家身份，下一步可再接雲端存檔。</span>
+                        <button id="btn-login-google" class="hub-tip-btn">使用 Google 登入</button>
+                    </div>
+
+                    <div id="auth-user" class="hidden">
+                        <div class="auth-user-row">
+                            <img id="auth-avatar" class="auth-avatar" src="assets/icons/potion_blue.png" alt="avatar">
+                            <div class="auth-user-meta">
+                                <strong id="auth-name">已登入玩家</strong>
+                                <span id="auth-email"></span>
+                            </div>
+                        </div>
+                        <button id="btn-logout" class="hub-tip-btn">登出</button>
+                    </div>
+                    <span id="cloud-save-status" class="cloud-save-status">未登入時僅保存在此裝置。</span>
+                </div>
+
+                <div id="install-card" class="hub-tip hidden">
+                    <span id="install-status">可安裝成桌面版，開啟更像原生 App。</span>
+                    <button id="btn-install-game" class="hub-tip-btn hidden">安裝遊戲</button>
+                    <span id="install-ios-tip" class="install-note hidden">iPhone 請用 Safari 點分享，再選「加入主畫面」。</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= VIEW: 關卡選擇 (MAP) ================= -->
+        <section id="view-map" class="view-section">
+            <div class="map-container">
+                <h2 class="section-heading">選擇待處理的委託單</h2>
+                <div class="level-grid" id="level-grid">
+                    <!-- 動態產生關卡按鈕 (未解鎖的不顯示) -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= VIEW: 魔法商店 (SHOP) ================= -->
+        <section id="view-shop" class="view-section">
+            <div class="shop-container">
+                <div class="shop-npc">
+                    <img src="assets/icons/potion_purple.png" alt="Shopkeeper" class="npc-avatar">
+                    <div class="npc-dialogue">您好，實習生。這裡能補體力、升級大釜，也能買到稀有的被動強化。</div>
+                </div>
+                <div class="shop-items" id="shop-items">
+                    <!-- 動態產生商品 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= VIEW: 遊戲本體 (GAME) ================= -->
+        <section id="view-game" class="view-section">
+            <header class="game-header">
+                <div class="header-main">
+                    <button id="btn-quit-game" class="quit-btn">◀ 撤退</button>
+                    <div class="game-info">
+                        <h1 id="game-title">委託 #1</h1>
+                        <p id="game-desc">利用邏輯還原出正確的配方排列</p>
+                    </div>
+                </div>
+                <div class="mana-container">
+                    <div class="mana-label">
+                        <span>精神力 (MANA)</span>
+                        <strong id="mana-val">100%</strong>
+                    </div>
+                    <div class="mana-bar">
+                        <div id="mana-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 歷史紀錄展示區 -->
+            <div id="history-display">
+                <div class="empty-hint">請透過下方素材面盤選擇並置入試管。<br><br>【公會操作守則】<br>每次提煉試驗：消耗 5 點精神力<br>精準提煉將為您恢復大量精神力。</div>
+            </div>
+
+            <!-- 下方操作控制台 -->
+            <div id="input-console">
+                <div class="cauldron-label">大釜置入列</div>
+                <div class="slots-container" id="slots-container">
+                    <div class="slot" data-index="0"></div>
+                    <div class="slot" data-index="1"></div>
+                    <div class="slot" data-index="2"></div>
+                    <div class="slot" data-index="3"></div>
+                    <div class="slot" data-index="4"></div>
+                </div>
+
+                <div class="palette-container" id="palette-container">
+                    <!-- 5種彩色試管按鈕 -->
+                </div>
+
+                <div class="action-container" id="action-container">
+                    <button class="btn btn-secondary" id="btn-hint">查閱文獻 (-15)</button>
+                    <button class="btn btn-primary" id="btn-submit" disabled>啟動提煉 (-5)</button>
+                </div>
+            </div>
+
+            <!-- Modal (結局/結算) -->
+            <div class="modal-overlay" id="result-modal">
+                <div class="modal-panel result-panel" id="result-panel" data-result="success">
+                    <div class="modal-topline" id="modal-topline">委託評級</div>
+                    <h2 id="modal-title">提煉完成</h2>
+                    <p id="modal-desc">委託人對這瓶成品的純度非常驚艷。</p>
+                    <div class="modal-story" id="modal-story">本次提煉過程已記錄進公會檔案。</div>
+                    
+                    <div class="stars-display" id="modal-stars">
+                        <!-- 動態插入圖片 -->
+                    </div>
+
+                    <div class="result-stats" id="modal-stats">
+                        <!-- 動態插入戰績摘要 -->
+                    </div>
+
+                    <div class="reward-box">
+                        <img src="assets/icons/coin.png" class="reward-icon">
+                        <span id="modal-coin-reward">+50</span>
+                    </div>
+
+                    <div class="modal-next" id="modal-next">下一張委託已排入待處理清單。</div>
+
+                    <button class="btn btn-primary modal-btn" id="btn-modal-action">確認簽收</button>
+                    
+                    <!-- 排行榜區塊 (僅在無盡模式顯示) -->
+                    <div id="leaderboard-box" class="hidden" style="margin-top: 15px; background: #f0f0f0; padding: 10px; border-radius: 12px; font-weight: 800; font-size: 14px;">
+                        全球最高防護排名：1994名
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 自訂確認視窗 (Confirm Modal) -->
+            <div id="confirm-modal" class="modal-overlay">
+                <div class="modal-panel">
+                    <h2 id="confirm-title" class="error-title">確認</h2>
+                    <p id="confirm-desc">您確定要執行此操作？</p>
+                    <div class="action-container" style="justify-content: center;">
+                        <button id="btn-confirm-cancel" class="btn btn-secondary">取消</button>
+                        <button id="btn-confirm-ok" class="btn btn-primary" style="background:var(--color-error); border-color:var(--color-error);">確定</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="game-message"></div>
+        </section>
+
+    </div>
+
+    <script src="js/audio.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/pwa.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script type="module" src="js/firebase-auth.js"></script>
+    <script type="module" src="js/firebase-save.js"></script>
+</body>
+</html>

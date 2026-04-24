@@ -1,0 +1,27 @@
+{
+  "name": "星辰煉金學苑：邊境實習",
+  "short_name": "星辰煉金",
+  "description": "在魔法工坊中完成委託、提煉配方並逐步升格的煉金解謎遊戲。",
+  "lang": "zh-TW",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fce8db",
+  "theme_color": "#fce8db",
+  "categories": ["games", "entertainment", "puzzle"],
+  "icons": [
+    {
+      "src": "assets/pwa/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/pwa/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

@@ -42,6 +42,7 @@ const els = {
     guest: document.getElementById("auth-guest"),
     user: document.getElementById("auth-user"),
     loginGoogle: document.getElementById("btn-login-google"),
+    loginGoogleSettings: document.getElementById("btn-settings-login-google"),
     logout: document.getElementById("btn-logout"),
     avatar: document.getElementById("auth-avatar"),
     name: document.getElementById("auth-name"),
@@ -164,6 +165,10 @@ function updateAuthUI(user) {
 
 if (els.loginGoogle) {
     els.loginGoogle.addEventListener("click", loginWithGoogle);
+}
+
+if (els.loginGoogleSettings) {
+    els.loginGoogleSettings.addEventListener("click", loginWithGoogle);
 }
 
 if (els.logout) {

@@ -368,6 +368,7 @@ class MagicAlchemyLab {
             settingsCloudCopy: document.getElementById('settings-cloud-copy'),
             btnCloudSync: document.getElementById('btn-cloud-sync'),
             btnDeleteData: document.getElementById('btn-delete-data'),
+            settingsAuthCard: document.getElementById('settings-auth-card'),
             slotsContainer: document.getElementById('slots-container'),
             questWidget: document.getElementById('quest-widget'),
             combatStage: document.getElementById('combat-stage'),
@@ -2428,6 +2429,9 @@ class MagicAlchemyLab {
         }
         if (this.els.btnCloudSync) {
             this.els.btnCloudSync.classList.toggle('hidden', !this.currentUser);
+        }
+        if (this.els.settingsAuthCard) {
+            this.els.settingsAuthCard.classList.toggle('hidden', !!this.currentUser);
         }
     }
 

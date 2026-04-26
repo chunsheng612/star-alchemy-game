@@ -46,10 +46,14 @@ function getSaveRef(uid) {
     return doc(db, "users", uid, "game", "save");
 }
 
-async function persistCloudData(uid, nextData) {
-    if (!uid || !window.app) return;
+/**
+ * Perform actual Firestore write
+ * @param {string} uid User ID
+ * @param {object} payload Serialized data
+ */
+async function persistCloudData(uid, payload) {
+    if (!uid || !payload) return;
 
-    const payload = window.app.getSerializableData(nextData);
     await setDoc(
         getSaveRef(uid),
         {
@@ -59,12 +63,14 @@ async function persistCloudData(uid, nextData) {
         },
         { merge: true }
     );
-
-    return payload;
 }
 
 async function flushSaveQueue() {
-    if (!activeUid || !queuedData || !window.app) return false;
+    if (!activeUid || !queuedData || !window.app) {
+        syncInFlight = false;
+        return false;
+    }
+
     if (syncInFlight) {
         requeueAfterSync = true;
         return false;
@@ -84,14 +90,20 @@ async function flushSaveQueue() {
         console.error("Cloud save sync failed:", error);
         lastSyncSucceeded = false;
         setStatus("雲端同步失敗，稍後會再試", "error");
-        if (snapshot) queuedData = snapshot;
+        
+        // Put back in queue if it wasn't replaced by newer data
+        if (!queuedData) queuedData = snapshot;
+        
         if (!syncFailureNotified) {
             syncFailureNotified = true;
-            showMessage("雲端同步失敗，請稍後再試", "error");
+            showMessage("雲端同步失敗，請確認網路連線", "error");
         }
+        
+        // Retry later
+        clearTimeout(saveTimer);
         saveTimer = setTimeout(() => {
             void flushSaveQueue();
-        }, 4000);
+        }, 8000);
     } finally {
         syncInFlight = false;
         if (requeueAfterSync) {
@@ -110,18 +122,29 @@ function queueSave(nextData) {
         return;
     }
 
+    // Capture snapshot immediately
     queuedData = window.app.getSerializableData(nextData);
-    setStatus("雲端同步中…", "busy");
+    
+    // If not currently syncing, show busy status and schedule
+    if (!syncInFlight) {
+        setStatus("雲端同步中…", "busy");
+    }
+
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
         void flushSaveQueue();
-    }, 700);
+    }, 1000);
 }
 
 async function hydrateCloudSave(user) {
     if (!user || !window.app) return;
+    if (syncInFlight) {
+        // If a sync is already happening (unlikely during boot/auth change), wait or skip
+        // For hydration, we usually want to finish this first.
+    }
 
     activeUid = user.uid;
+    syncInFlight = true;
     setStatus("雲端存檔讀取中…", "busy");
 
     const localData = window.app.getSerializableData(window.app.data, { touchTimestamp: false });
@@ -132,8 +155,10 @@ async function hydrateCloudSave(user) {
         const cloudData = snap.exists() ? snap.data()?.saveData || null : null;
 
         if (!cloudData) {
+            // New cloud user, upload local data
             await persistCloudData(user.uid, localData);
             setStatus("已建立雲端存檔", "success");
+            syncInFlight = false;
             return;
         }
 
@@ -149,6 +174,7 @@ async function hydrateCloudSave(user) {
         }
 
         if (mergedJson !== cloudJson) {
+            // Cloud needs update after merge
             await persistCloudData(user.uid, mergedData);
         }
 
@@ -158,6 +184,13 @@ async function hydrateCloudSave(user) {
         console.error("Cloud save hydrate failed:", error);
         setStatus("雲端讀取失敗，目前使用本機存檔", "error");
         showMessage("雲端存檔讀取失敗，目前使用本機進度", "error");
+    } finally {
+        syncInFlight = false;
+        // Check if anything was queued during hydration
+        if (requeueAfterSync) {
+            requeueAfterSync = false;
+            void flushSaveQueue();
+        }
     }
 }
 
@@ -178,6 +211,7 @@ onAuthStateChanged(auth, async (user) => {
     clearTimeout(saveTimer);
     queuedData = null;
     requeueAfterSync = false;
+    syncInFlight = false; // Reset on auth change
 
     if (!user) {
         activeUid = null;

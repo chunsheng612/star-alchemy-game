@@ -2542,12 +2542,18 @@ class MagicAlchemyLab {
 
         this.els.btnGuestStart?.addEventListener('click', () => {
             if (window.audio) window.audio.playClick();
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(() => { });
-            }
+            
+            // Prioritize entering the hub first for better responsiveness on mobile
             this.sessionStarted = true;
-            this.saveData({ showToast: false });
             this.enterHub();
+            this.saveData({ showToast: false });
+
+            // Try fullscreen as a progressive enhancement, catching any browser-specific errors
+            if (typeof document.documentElement.requestFullscreen === 'function') {
+                document.documentElement.requestFullscreen().catch(() => {
+                    // Fail silently as many mobile browsers block this or have restricted support
+                });
+            }
         });
 
         this.els.btnDailyStart?.addEventListener('click', () => {

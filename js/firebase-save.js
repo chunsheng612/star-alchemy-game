@@ -1,5 +1,5 @@
 import {
-    getFirestore,
+    initializeFirestore,
     doc,
     getDoc,
     setDoc,
@@ -28,8 +28,11 @@ function ensureFirebase() {
     if (db && auth) return true;
     const fb = window.firebaseAuth;
     if (fb?.firebaseApp && fb?.auth) {
-        // Only import these once we are sure FB is ready to avoid module evaluation errors
-        db = getFirestore(fb.firebaseApp);
+        // Use initializeFirestore with long polling to fix 'offline' issues on mobile networks
+        db = initializeFirestore(fb.firebaseApp, {
+            experimentalForceLongPolling: true,
+            useFetchStreams: false
+        });
         auth = fb.auth;
         return true;
     }
@@ -73,9 +76,9 @@ function getSaveRef(uid) {
 async function persistCloudData(uid, payload) {
     if (!uid || !payload || !ensureFirebase()) return;
 
-    // Create a 10-second timeout promise
+    // Use a longer timeout for mobile networks (25 seconds)
     const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Cloud write timeout (10s)")), 10000)
+        setTimeout(() => reject(new Error("Cloud write timeout (25s)")), 25000)
     );
 
     const savePromise = setDoc(
@@ -88,7 +91,6 @@ async function persistCloudData(uid, payload) {
         { merge: true }
     );
 
-    // Race between save and timeout
     await Promise.race([savePromise, timeoutPromise]);
 }
 
@@ -120,23 +122,29 @@ async function flushSaveQueue() {
             }
         }, 5000);
     } catch (error) {
-        console.error("Cloud save sync failed or timed out:", error);
+        console.error("Cloud sync detailed error:", error);
         lastSyncSucceeded = false;
         
         const isTimeout = error.message?.includes("timeout");
-        setStatus(isTimeout ? "雲端同步超時，稍後重試" : "雲端同步失敗，稍後重試", "error");
+        const errorCode = error.code || (isTimeout ? "timeout" : "unknown");
+        
+        // Show specific error code to help debugging
+        setStatus(`同步失敗 (${errorCode})，重試中`, "error");
         
         if (!queuedData) queuedData = snapshot;
         
         if (!syncFailureNotified) {
             syncFailureNotified = true;
-            showMessage(isTimeout ? "雲端連線較慢，正在背景重試" : "雲端同步失敗，請確認網路連線", "error");
+            const userMsg = isTimeout 
+                ? "連線較慢，正在背景排隊上傳" 
+                : `同步錯誤: ${errorCode}，請確認網路`;
+            showMessage(userMsg, "error");
         }
         
         clearTimeout(saveTimer);
         saveTimer = setTimeout(() => {
             void flushSaveQueue();
-        }, 8000);
+        }, 10000); // Wait a bit longer before retry
     } finally {
         syncInFlight = false;
         if (requeueAfterSync) {

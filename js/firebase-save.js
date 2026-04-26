@@ -3,7 +3,8 @@ import {
     doc,
     getDoc,
     setDoc,
-    serverTimestamp
+    serverTimestamp,
+    enableNetwork
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 
@@ -28,12 +29,14 @@ function ensureFirebase() {
     if (db && auth) return true;
     const fb = window.firebaseAuth;
     if (fb?.firebaseApp && fb?.auth) {
-        // Use initializeFirestore with long polling to fix 'offline' issues on mobile networks
         db = initializeFirestore(fb.firebaseApp, {
             experimentalForceLongPolling: true,
             useFetchStreams: false
         });
         auth = fb.auth;
+        
+        // Force network to on to fix the 'client is offline' false positive
+        void enableNetwork(db).catch(e => console.warn("Enable network failed:", e));
         return true;
     }
     return false;
@@ -128,7 +131,6 @@ async function flushSaveQueue() {
         const isTimeout = error.message?.includes("timeout");
         const errorCode = error.code || (isTimeout ? "timeout" : "unknown");
         
-        // Show specific error code to help debugging
         setStatus(`同步失敗 (${errorCode})，重試中`, "error");
         
         if (!queuedData) queuedData = snapshot;
@@ -144,7 +146,7 @@ async function flushSaveQueue() {
         clearTimeout(saveTimer);
         saveTimer = setTimeout(() => {
             void flushSaveQueue();
-        }, 10000); // Wait a bit longer before retry
+        }, 10000);
     } finally {
         syncInFlight = false;
         if (requeueAfterSync) {
@@ -172,9 +174,9 @@ function queueSave(nextData) {
     }, 1200);
 }
 
-async function hydrateCloudSave(user) {
+async function hydrateCloudSave(user, retryCount = 0) {
     if (!user || !window.app || !ensureFirebase()) return;
-    if (syncInFlight) return;
+    if (syncInFlight && retryCount === 0) return;
 
     activeUid = user.uid;
     syncInFlight = true;
@@ -184,6 +186,9 @@ async function hydrateCloudSave(user) {
     const saveRef = getSaveRef(user.uid);
 
     try {
+        // Ensure network is on
+        await enableNetwork(db).catch(() => {});
+        
         const snap = await getDoc(saveRef);
         const cloudData = snap.exists() ? snap.data()?.saveData || null : null;
 
@@ -219,9 +224,25 @@ async function hydrateCloudSave(user) {
             }
         }, 5000);
     } catch (error) {
-        console.error("Cloud save hydrate failed:", error);
-        setStatus("雲端讀取失敗，目前使用本機存檔", "error");
-        showMessage("雲端存檔讀取失敗，目前使用本機進度", "error");
+        console.error(`Cloud save hydrate failed (Attempt ${retryCount + 1}):`, error);
+        
+        // Auto retry once if it's a network issue
+        if (retryCount < 1 && (error.message?.includes("offline") || error.message?.includes("timeout"))) {
+            console.log("[Sync] Retrying hydration in 3 seconds...");
+            setTimeout(() => {
+                void hydrateCloudSave(user, retryCount + 1);
+            }, 3000);
+            return;
+        }
+
+        if (error.message?.includes("offline")) {
+            setStatus("雲端連線失敗 (離線模式)", "error");
+        } else {
+            setStatus("雲端讀取失敗，目前使用本機存檔", "error");
+        }
+        
+        // Only show message toast if it's the final retry
+        showMessage("雲端同步連線中，請稍候...", "info");
     } finally {
         syncInFlight = false;
         if (requeueAfterSync) {
@@ -244,7 +265,6 @@ window.cloudSave = {
     }
 };
 
-// Use a recurring check for auth if it's not ready immediately
 const checkAuthInterval = setInterval(() => {
     if (ensureFirebase()) {
         clearInterval(checkAuthInterval);
@@ -260,6 +280,10 @@ const checkAuthInterval = setInterval(() => {
                 setStatus("未登入時僅保存在此裝置。");
                 return;
             }
+            
+            // Force network enable on auth change to wake up Firestore
+            void enableNetwork(db).catch(() => {});
+            
             await hydrateCloudSave(user);
         });
     }

@@ -169,18 +169,24 @@ function updateAuthUI(user) {
     }
 }
 
-if (els.loginGoogle) {
-    els.loginGoogle.addEventListener("click", loginWithGoogle);
-}
-
-if (els.loginGoogleSettings) {
-    els.loginGoogleSettings.addEventListener("click", loginWithGoogle);
-}
+// 使用事件代理 (Event Delegation) 監聽所有 Google 登入按鈕
+// 這能確保即使按鈕是動態生成的或是被 app.js 重新操作過，依然能正確觸發
+document.addEventListener('click', (e) => {
+    const loginBtn = e.target.closest('#btn-login-google, #btn-settings-login-google');
+    if (loginBtn) {
+        e.preventDefault();
+        // 播放點擊音效 (如果有的話)
+        if (window.audio) window.audio.playClick();
+        console.log(`[Auth] Login triggered via ${loginBtn.id}`);
+        void loginWithGoogle();
+    }
+});
 
 if (els.logout) {
     els.logout.addEventListener("click", logoutUser);
 }
 
+// 處理重新導向結果
 getRedirectResult(auth)
     .then((result) => {
         if (result?.user) {
@@ -188,7 +194,7 @@ getRedirectResult(auth)
         }
     })
     .catch((error) => {
-        console.error(error);
+        console.error("[Auth] Redirect Result Error:", error);
         if (error?.code === "auth/no-auth-event") return;
         showMessage(getAuthErrorMessage(error), "error");
     });

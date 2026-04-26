@@ -17,8 +17,27 @@
 </head>
 <body>
     <div id="particles-container"></div>
+    <div id="boot-overlay" class="boot-overlay active">
+        <div class="boot-layer boot-loader" id="boot-loader">
+            <div class="boot-rune"></div>
+            <div class="boot-title-mini">STAR ALCHEMY</div>
+            <div class="boot-status" id="boot-status">正在校準邊境大釜...</div>
+        </div>
+    </div>
 
     <div id="app-container">
+
+        <!-- 開場角色問好 -->
+        <div id="greeting-overlay" class="greeting-overlay">
+            <div class="greeting-card">
+                <div class="greeting-portrait">
+                    <img id="greeting-image" src="assets/char_alchemist.png" alt="角色">
+                </div>
+                <div class="greeting-name" id="greeting-name">艾莉絲</div>
+                <p class="greeting-text" id="greeting-text">歡迎回來！</p>
+                <div class="greeting-tap">點擊繼續 ▼</div>
+            </div>
+        </div>
         
         <!-- 自動存檔提示 (Toast) -->
         <div id="save-toast" class="hidden">
@@ -38,10 +57,10 @@
         <!-- 劇情對話系統 (Dialogue Overlay) -->
         <div id="dialogue-overlay">
             <div class="dialogue-character">
-                <img src="assets/char_alchemist.png" alt="Iris">
+                <img id="dialogue-character-image" class="portrait-iris" src="assets/char_alchemist.png" alt="Iris">
             </div>
             <div class="dialogue-box">
-                <h3 class="dialogue-name">艾莉絲</h3>
+                <h3 class="dialogue-name" id="dialogue-name">艾莉絲</h3>
                 <p class="dialogue-text" id="dialogue-text">...</p>
                 <div class="dialogue-continue">點擊繼續 <span>▼</span></div>
             </div>
@@ -62,60 +81,197 @@
 
         <!-- ================= VIEW: 首頁 (HUB) ================= -->
         <section id="view-hub" class="view-section active-view">
-            <div class="hub-content">
-                <div class="logo-box">
-                    <h1>星辰煉金學苑<br><span class="sub-title">邊境實習</span></h1>
-                    <p>精準備妥委託人的需求，是煉金術師的基礎。</p>
-                </div>
-                
-                <div class="menu-buttons">
-                    <button class="menu-btn primary-btn" onclick="app.showLocation('map')">
-                        <span class="btn-icon">📜</span> 開始遊戲
-                    </button>
-                    <!-- 無限挑戰初期完全隱藏 -->
-                    <button id="btn-endless" class="menu-btn endless-btn real-hidden" onclick="app.startEndless()">
-                        <span class="btn-icon">♾️</span> 無限挑戰
-                    </button>
-                    <button class="menu-btn shop-btn" onclick="app.showLocation('shop')">
-                        <span class="btn-icon">🏪</span> 開啟商店
-                    </button>
-                </div>
-
-                <div id="hub-stamina-tip" class="hub-tip hidden">
-                    <span id="hub-tip-text">開始委託需要體力。</span>
-                    <button id="btn-hub-tip-shop" class="hub-tip-btn">前往商店補給</button>
-                </div>
-
-                <div id="auth-card" class="hub-tip">
-                    <div id="auth-guest">
-                        <span>登入後可保留玩家身份，下一步可再接雲端存檔。</span>
-                        <button id="btn-login-google" class="hub-tip-btn">使用 Google 登入</button>
+            <div class="hub-content hub-hero-layout">
+                <div class="home-shell hub-top-card">
+                    <div class="home-brand">
+                        <span class="home-kicker">STAR ALCHEMY</span>
+                        <h1>星辰煉金</h1>
                     </div>
 
-                    <div id="auth-user" class="hidden">
-                        <div class="auth-user-row">
-                            <img id="auth-avatar" class="auth-avatar" src="assets/icons/potion_blue.png" alt="avatar">
-                            <div class="auth-user-meta">
-                                <strong id="auth-name">已登入玩家</strong>
-                                <span id="auth-email"></span>
+                    <div id="auth-card" class="home-auth-card">
+                        <button id="btn-guest-start" class="btn btn-primary home-start-btn" aria-label="開始遊戲">
+                            ✦ 開始遊戲
+                        </button>
+                        <p id="home-save-note" class="home-save-note">未登入時將記錄保存在這台裝置；登入 Google 後會自動同步到雲端。</p>
+                        <div id="auth-guest">
+                            <button id="btn-login-google" class="btn-google-small" aria-label="Google 登入">
+                                <span class="google-mark">G</span>
+                                <span>以 Google 帳號遊玩</span>
+                            </button>
+                        </div>
+
+                        <div id="auth-user" class="hidden">
+                            <div class="auth-user-row auth-user-chip">
+                                <img id="auth-avatar" class="auth-avatar" src="assets/icons/potion_blue.png" alt="avatar">
+                                <div class="auth-user-meta">
+                                    <strong id="auth-name">已登入玩家</strong>
+                                    <span id="auth-email"></span>
+                                </div>
+                            </div>
+                            <button id="btn-logout" class="btn-text-only">登出</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hub-hero-container">
+                    <div class="hero-bubble" id="hero-bubble">
+                        <span class="bubble-kicker">目前的目標</span>
+                        <p id="hub-task-text">新的委託正在等待處理。</p>
+                        <small id="hero-guide-meta" class="hero-guide-meta">故事直接進選關，每日與無限挑戰都不會消耗體力。</small>
+                    </div>
+                    <div class="hero-portrait-wrap" id="btn-hero-interact">
+                        <img id="hub-hero-image" src="assets/char_alchemist.png" alt="艾莉絲" class="hero-img">
+                    </div>
+                </div>
+
+                <div class="hub-panel-stack">
+                    <section class="hub-panel active" data-panel="story">
+                        <div class="hub-panel-head">
+                            <div>
+                                <span class="hub-panel-kicker">故事主線</span>
+                                <h2 id="story-next-title">晨露校準</h2>
+                                <p id="story-next-desc">下一張委託已經送到桌上，準備處理主線任務。</p>
+                            </div>
+                            <span class="hub-panel-badge" id="story-progress-badge">第 1 關</span>
+                        </div>
+
+                        <button id="btn-story-start" class="hub-large-action">
+                            <div class="action-info">
+                                <span>前往故事選關</span>
+                                <small id="story-progress-text">第 1 關：晨露校準</small>
+                            </div>
+                            <img src="assets/icons/nav_story.png" alt="故事">
+                        </button>
+                    </section>
+
+                    <section class="hub-panel" data-panel="daily">
+                        <div class="hub-panel-head">
+                            <div>
+                                <span class="hub-panel-kicker">每日輪替</span>
+                                <h2 id="daily-title">今日挑戰</h2>
+                                <p id="daily-desc">每日星圖正在重新校準中。</p>
+                            </div>
+                            <span class="hub-panel-badge">不限次數</span>
+                        </div>
+
+                        <button id="btn-daily-start" class="hub-large-action daily-action">
+                            <div class="action-info">
+                                <span>啟動每日挑戰</span>
+                                <small id="daily-status-text">今日首通可得 500 星幣</small>
+                            </div>
+                            <img src="assets/icons/nav_daily.png" alt="每日">
+                        </button>
+
+                        <div class="daily-meta">
+                            <span id="daily-rule-label">規格待定</span>
+                            <strong id="daily-reward-status">今日首通可得 500 星幣</strong>
+                        </div>
+
+                        <div class="weekly-card">
+                            <div class="weekly-head">
+                                <div>
+                                    <span class="hub-panel-kicker">每週簽到</span>
+                                    <h3>七日蓋章日曆</h3>
+                                </div>
+                                <span class="hub-panel-badge" id="weekly-progress-text">0 / 7</span>
+                            </div>
+                            <div class="weekly-calendar" id="weekly-calendar"></div>
+                            <p class="weekly-reward-text" id="weekly-reward-text">完成 7 天每日挑戰蓋章，可額外獲得 500 星幣。</p>
+                        </div>
+
+                        <button id="btn-endless-start" class="hub-large-action endless-action">
+                            <div class="action-info">
+                                <span>啟動無限挑戰</span>
+                                <small>不限次數、不耗體力，每次完成可得 10 星幣。</small>
+                            </div>
+                            <img src="assets/icons/swirl.png" alt="無限挑戰">
+                        </button>
+                    </section>
+
+                    <section class="hub-panel" data-panel="inventory">
+                        <div class="hub-panel-head">
+                            <div>
+                                <span class="hub-panel-kicker">實習裝備</span>
+                                <h2>我的道具</h2>
+                                <p>目前已啟用的工坊強化與狀態總覽。</p>
                             </div>
                         </div>
-                        <button id="btn-logout" class="hub-tip-btn">登出</button>
-                    </div>
-                    <span id="cloud-save-status" class="cloud-save-status">未登入時僅保存在此裝置。</span>
+                        <div class="inventory-grid" id="inventory-grid"></div>
+                    </section>
+
+                    <section class="hub-panel" data-panel="settings">
+                        <div class="hub-panel-head">
+                            <div>
+                                <span class="hub-panel-kicker">工坊控制</span>
+                                <h2>設定</h2>
+                                <p>音效、安裝版與系統狀態。</p>
+                            </div>
+                        </div>
+                        <div class="settings-stack">
+                            <button id="btn-toggle-audio" class="menu-btn shop-btn settings-btn" title="切換音效">♪ 切換音效</button>
+                            <div class="feed-card">
+                                <span class="feed-kicker">系統狀態</span>
+                                <h3>裝置與雲端</h3>
+                                <p>Google 登入與雲端存檔可跨裝置延續進度，安裝到主畫面後體驗會更接近手機遊戲。</p>
+                            </div>
+                            <div class="feed-card">
+                                <span class="feed-kicker">存檔同步</span>
+                                <h3 id="settings-cloud-title">本機存檔模式</h3>
+                                <p id="settings-cloud-copy">未登入時會保存在此裝置；登入 Google 後，任何金幣、體力與進度變動都會自動上傳。</p>
+                                <span id="cloud-save-status-detail" class="cloud-save-status">未登入時僅保存在此裝置。</span>
+                                <div class="auth-action-row">
+                                    <button id="btn-cloud-sync" class="hub-tip-btn secondary hidden">手動上傳資料</button>
+                                </div>
+                            </div>
+                            <div id="install-card" class="hub-tip hidden">
+                                <span id="install-status">可安裝成桌面版，開啟更像原生 App。</span>
+                                <button id="btn-install-game" class="hub-tip-btn hidden">安裝遊戲</button>
+                                <span id="install-ios-tip" class="install-note hidden">iPhone 請用 Safari 點分享，再選「加入主畫面」。</span>
+                            </div>
+                        </div>
+                    </section>
                 </div>
 
-                <div id="install-card" class="hub-tip hidden">
-                    <span id="install-status">可安裝成桌面版，開啟更像原生 App。</span>
-                    <button id="btn-install-game" class="hub-tip-btn hidden">安裝遊戲</button>
-                    <span id="install-ios-tip" class="install-note hidden">iPhone 請用 Safari 點分享，再選「加入主畫面」。</span>
+                <div class="hub-utility-row">
+                    <div id="hub-stamina-tip" class="hub-tip hidden">
+                        <span id="hub-tip-text">開始委託需要體力。</span>
+                        <button id="btn-hub-tip-shop" class="hub-tip-btn">前往商店補給</button>
+                    </div>
                 </div>
+
+                <nav class="hub-bottom-nav styled-nav" id="hub-bottom-nav">
+                    <button class="hub-nav-btn" data-hub-target="shop">
+                        <img src="assets/icons/nav_shop.png" alt="商店">
+                        <span>商店</span>
+                    </button>
+                    <button class="hub-nav-btn" data-hub-target="inventory">
+                        <img src="assets/icons/nav_inventory.png" alt="道具">
+                        <span>道具</span>
+                    </button>
+                    <button class="hub-nav-btn main-orb-btn active" data-hub-target="story">
+                        <img src="assets/icons/nav_story.png" alt="故事">
+                        <span>故事</span>
+                    </button>
+                    <button class="hub-nav-btn" data-hub-target="daily">
+                        <img src="assets/icons/nav_daily.png" alt="每日">
+                        <span>每日</span>
+                    </button>
+                    <button class="hub-nav-btn" data-hub-target="settings">
+                        <img src="assets/icons/nav_settings.png" alt="設定">
+                        <span>設定</span>
+                    </button>
+                </nav>
             </div>
         </section>
 
         <!-- ================= VIEW: 關卡選擇 (MAP) ================= -->
         <section id="view-map" class="view-section">
             <div class="map-container">
+                <div class="map-tools">
+                    <button id="btn-map-shop" class="map-mini-btn">商店補給</button>
+                    <button id="btn-map-daily" class="map-mini-btn map-mini-btn-secondary">每日挑戰</button>
+                </div>
+                <span id="cloud-save-status" class="cloud-save-status map-cloud-status">未登入時僅保存在此裝置。</span>
                 <h2 class="section-heading">選擇待處理的委託單</h2>
                 <div class="level-grid" id="level-grid">
                     <!-- 動態產生關卡按鈕 (未解鎖的不顯示) -->
@@ -127,7 +283,7 @@
         <section id="view-shop" class="view-section">
             <div class="shop-container">
                 <div class="shop-npc">
-                    <img src="assets/icons/potion_purple.png" alt="Shopkeeper" class="npc-avatar">
+                    <img src="assets/char_broker.png" alt="Shopkeeper" class="npc-avatar broker-avatar">
                     <div class="npc-dialogue">您好，實習生。這裡能補體力、升級大釜，也能買到稀有的被動強化。</div>
                 </div>
                 <div class="shop-items" id="shop-items">

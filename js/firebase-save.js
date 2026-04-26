@@ -16,7 +16,8 @@ if (!firebaseApp || !auth) {
 
 const db = getFirestore(firebaseApp);
 const els = {
-    status: document.getElementById("cloud-save-status")
+    status: document.getElementById("cloud-save-status"),
+    detail: document.getElementById("cloud-save-status-detail")
 };
 
 let activeUid = null;
@@ -25,6 +26,7 @@ let saveTimer = null;
 let syncInFlight = false;
 let requeueAfterSync = false;
 let syncFailureNotified = false;
+let lastSyncSucceeded = false;
 
 function showMessage(text, type = "info") {
     if (window.app && typeof window.app.showMessage === "function") {
@@ -33,9 +35,11 @@ function showMessage(text, type = "info") {
 }
 
 function setStatus(text, tone = "") {
-    if (!els.status) return;
-    els.status.textContent = text;
-    els.status.className = `cloud-save-status${tone ? ` is-${tone}` : ""}`;
+    [els.status, els.detail].forEach((node) => {
+        if (!node) return;
+        node.textContent = text;
+        node.className = `cloud-save-status${tone ? ` is-${tone}` : ""}`;
+    });
 }
 
 function getSaveRef(uid) {
@@ -60,10 +64,10 @@ async function persistCloudData(uid, nextData) {
 }
 
 async function flushSaveQueue() {
-    if (!activeUid || !queuedData || !window.app) return;
+    if (!activeUid || !queuedData || !window.app) return false;
     if (syncInFlight) {
         requeueAfterSync = true;
-        return;
+        return false;
     }
 
     const snapshot = queuedData;
@@ -74,9 +78,11 @@ async function flushSaveQueue() {
     try {
         await persistCloudData(activeUid, snapshot);
         syncFailureNotified = false;
+        lastSyncSucceeded = true;
         setStatus("雲端已同步", "success");
     } catch (error) {
         console.error("Cloud save sync failed:", error);
+        lastSyncSucceeded = false;
         setStatus("雲端同步失敗，稍後會再試", "error");
         if (snapshot) queuedData = snapshot;
         if (!syncFailureNotified) {
@@ -93,6 +99,7 @@ async function flushSaveQueue() {
             void flushSaveQueue();
         }
     }
+    return lastSyncSucceeded;
 }
 
 function queueSave(nextData) {
@@ -156,7 +163,15 @@ async function hydrateCloudSave(user) {
 
 window.cloudSave = {
     queueSave,
-    forceSync: () => flushSaveQueue()
+    forceSync: async () => {
+        if (!activeUid || !window.app) {
+            setStatus("未登入時僅保存在此裝置。");
+            return false;
+        }
+        queuedData = window.app.getSerializableData(window.app.data);
+        clearTimeout(saveTimer);
+        return flushSaveQueue();
+    }
 };
 
 onAuthStateChanged(auth, async (user) => {

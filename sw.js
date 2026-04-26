@@ -1,9 +1,8 @@
-const CACHE_NAME = "staralchemy-shell-v9";
-const ASSET_VERSION = "20260427-syncfix1";
+const CACHE_NAME = "staralchemy-shell-v11";
+const ASSET_VERSION = "20260427-syncfix3";
 const CORE_ASSETS = [
     "./",
     "./index.html",
-    `./favicon.ico?v=${ASSET_VERSION}`,
     `./manifest.webmanifest?v=${ASSET_VERSION}`,
     `./css/style.css?v=${ASSET_VERSION}`,
     `./js/app.js?v=${ASSET_VERSION}`,
@@ -27,9 +26,21 @@ const CORE_ASSETS = [
     "./assets/pwa/icon-512.png"
 ];
 
+async function cacheCoreAssets(cache) {
+    const results = await Promise.allSettled(
+        CORE_ASSETS.map((assetUrl) => cache.add(assetUrl))
+    );
+
+    results.forEach((result, index) => {
+        if (result.status === "rejected") {
+            console.warn("[SW] Core asset cache skipped:", CORE_ASSETS[index], result.reason);
+        }
+    });
+}
+
 self.addEventListener("install", (event) => {
     event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS)).then(() => self.skipWaiting())
+        caches.open(CACHE_NAME).then(cacheCoreAssets).then(() => self.skipWaiting())
     );
 });
 

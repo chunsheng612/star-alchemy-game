@@ -1135,6 +1135,44 @@ class MagicAlchemyLab {
         return serialized;
     }
 
+    getSaveProgressVector(data = null) {
+        const save = data || this.getDefaultData();
+        const totalStars = Object.values(save.levelStars || {}).reduce((sum, stars) => sum + (Number(stars) || 0), 0);
+        const titleLevelTotal = Object.values(save.player?.titleLevels || {}).reduce((sum, level) => sum + (Number(level) || 0), 0);
+        const shopLevelTotal = Object.values(save.upgrades?.shopLevels || {}).reduce((sum, level) => sum + (Number(level) || 0), 0);
+
+        return [
+            save.highestLevel || 1,
+            totalStars,
+            (save.player?.unlockedTitles || []).length,
+            titleLevelTotal,
+            save.maxMana || 0,
+            save.maxStamina || 0,
+            shopLevelTotal,
+            save.stats?.wins || 0,
+            save.stats?.dailyWins || 0,
+            save.stats?.endlessBestDefeated || 0,
+            save.stats?.endlessBestScore || 0,
+            save.stats?.coinsSpent || 0
+        ];
+    }
+
+    compareSaveProgress(firstData = null, secondData = null) {
+        const firstVector = this.getSaveProgressVector(firstData);
+        const secondVector = this.getSaveProgressVector(secondData);
+
+        for (let i = 0; i < firstVector.length; i++) {
+            if (firstVector[i] !== secondVector[i]) {
+                return firstVector[i] > secondVector[i] ? 1 : -1;
+            }
+        }
+
+        const firstTime = Number(firstData?.updatedAt) || 0;
+        const secondTime = Number(secondData?.updatedAt) || 0;
+        if (firstTime === secondTime) return 0;
+        return firstTime > secondTime ? 1 : -1;
+    }
+
     mergeSaveData(firstData = null, secondData = null) {
         const createEmptyState = () => {
             const empty = this.getDefaultData();
@@ -1144,39 +1182,42 @@ class MagicAlchemyLab {
 
         const left = firstData ? this.normalizeData(firstData) : createEmptyState();
         const right = secondData ? this.normalizeData(secondData) : createEmptyState();
+        const preferred = this.compareSaveProgress(left, right) >= 0 ? left : right;
+        const fallback = preferred === left ? right : left;
         const newer = left.updatedAt >= right.updatedAt ? left : right;
         const older = newer === left ? right : left;
 
-        const merged = this.normalizeData(newer);
-        merged.maxMana = Math.max(newer.maxMana, older.maxMana);
-        merged.highestLevel = Math.max(newer.highestLevel, older.highestLevel);
+        const merged = this.normalizeData(preferred);
+        merged.maxMana = Math.max(left.maxMana, right.maxMana);
+        merged.maxStamina = Math.max(left.maxStamina, right.maxStamina);
+        merged.highestLevel = Math.max(left.highestLevel, right.highestLevel);
         merged.levelStars = {};
 
         const allStarLevels = new Set([
-            ...Object.keys(newer.levelStars || {}),
-            ...Object.keys(older.levelStars || {})
+            ...Object.keys(left.levelStars || {}),
+            ...Object.keys(right.levelStars || {})
         ]);
         allStarLevels.forEach((levelId) => {
-            merged.levelStars[levelId] = Math.max(newer.levelStars[levelId] || 0, older.levelStars[levelId] || 0);
+            merged.levelStars[levelId] = Math.max(left.levelStars[levelId] || 0, right.levelStars[levelId] || 0);
         });
 
-        const mergedShopLevels = { ...(older.upgrades?.shopLevels || {}), ...(newer.upgrades?.shopLevels || {}) };
+        const mergedShopLevels = { ...(right.upgrades?.shopLevels || {}), ...(left.upgrades?.shopLevels || {}) };
         Object.keys(mergedShopLevels).forEach(k => {
-            mergedShopLevels[k] = Math.max(newer.upgrades?.shopLevels?.[k] || 0, older.upgrades?.shopLevels?.[k] || 0);
+            mergedShopLevels[k] = Math.max(left.upgrades?.shopLevels?.[k] || 0, right.upgrades?.shopLevels?.[k] || 0);
         });
         merged.upgrades = {
             shopLevels: mergedShopLevels
         };
 
         merged.stats = {
-            wins: Math.max(newer.stats.wins, older.stats.wins),
-            manaSpent: Math.max(newer.stats.manaSpent, older.stats.manaSpent),
-            stars: Math.max(newer.stats.stars, older.stats.stars),
-            endlessPlayed: Math.max(newer.stats.endlessPlayed, older.stats.endlessPlayed),
-            coinsSpent: Math.max(newer.stats.coinsSpent, older.stats.coinsSpent),
-            dailyWins: Math.max(newer.stats.dailyWins, older.stats.dailyWins),
-            endlessBestScore: Math.max(newer.stats.endlessBestScore, older.stats.endlessBestScore),
-            endlessBestDefeated: Math.max(newer.stats.endlessBestDefeated, older.stats.endlessBestDefeated)
+            wins: Math.max(left.stats.wins, right.stats.wins),
+            manaSpent: Math.max(left.stats.manaSpent, right.stats.manaSpent),
+            stars: Math.max(left.stats.stars, right.stats.stars),
+            endlessPlayed: Math.max(left.stats.endlessPlayed, right.stats.endlessPlayed),
+            coinsSpent: Math.max(left.stats.coinsSpent, right.stats.coinsSpent),
+            dailyWins: Math.max(left.stats.dailyWins, right.stats.dailyWins),
+            endlessBestScore: Math.max(left.stats.endlessBestScore, right.stats.endlessBestScore),
+            endlessBestDefeated: Math.max(left.stats.endlessBestDefeated, right.stats.endlessBestDefeated)
         };
 
         merged.daily = {
@@ -1185,40 +1226,41 @@ class MagicAlchemyLab {
             bestTurns: newer.daily.bestTurns && older.daily.bestTurns
                 ? Math.min(newer.daily.bestTurns, older.daily.bestTurns)
                 : Math.max(newer.daily.bestTurns || 0, older.daily.bestTurns || 0),
-            lastPlayedDate: newer.daily.lastPlayedDate || older.daily.lastPlayedDate || ''
+            lastPlayedDate: newer.daily.lastPlayedDate || older.daily.lastPlayedDate || '',
+            playCount: Math.max(newer.daily.playCount || 0, older.daily.playCount || 0)
         };
 
         const weeklyCycle = newer.weekly.cycleStart || older.weekly.cycleStart || '';
         const weeklyStamps = new Set([
-            ...(newer.weekly.cycleStart === weeklyCycle ? newer.weekly.stamps : []),
-            ...(older.weekly.cycleStart === weeklyCycle ? older.weekly.stamps : [])
+            ...(left.weekly.cycleStart === weeklyCycle ? left.weekly.stamps : []),
+            ...(right.weekly.cycleStart === weeklyCycle ? right.weekly.stamps : [])
         ]);
         merged.weekly = {
             cycleStart: weeklyCycle,
             stamps: [...weeklyStamps].sort(),
             rewardClaimed:
-                (newer.weekly.cycleStart === weeklyCycle && newer.weekly.rewardClaimed) ||
-                (older.weekly.cycleStart === weeklyCycle && older.weekly.rewardClaimed)
+                (left.weekly.cycleStart === weeklyCycle && left.weekly.rewardClaimed) ||
+                (right.weekly.cycleStart === weeklyCycle && right.weekly.rewardClaimed)
         };
 
         const mergedTitles = new Set([
-            ...(newer.player.unlockedTitles || []),
-            ...(older.player.unlockedTitles || [])
+            ...(left.player.unlockedTitles || []),
+            ...(right.player.unlockedTitles || [])
         ]);
-        const mergedTitleLevels = { ...(older.player?.titleLevels || {}), ...(newer.player?.titleLevels || {}) };
+        const mergedTitleLevels = { ...(right.player?.titleLevels || {}), ...(left.player?.titleLevels || {}) };
         Object.keys(mergedTitleLevels).forEach(k => {
-            mergedTitleLevels[k] = Math.max(newer.player?.titleLevels?.[k] || 0, older.player?.titleLevels?.[k] || 0);
+            mergedTitleLevels[k] = Math.max(left.player?.titleLevels?.[k] || 0, right.player?.titleLevels?.[k] || 0);
         });
         merged.player = {
-            selectedCharacter: newer.player.selectedCharacter || older.player.selectedCharacter || 'female',
+            selectedCharacter: preferred.player.selectedCharacter || fallback.player.selectedCharacter || 'female',
             unlockedTitles: [...mergedTitles],
-            activeTitle: mergedTitles.has(newer.player.activeTitle) ? newer.player.activeTitle : 'apprentice',
+            activeTitle: mergedTitles.has(preferred.player.activeTitle) ? preferred.player.activeTitle : 'apprentice',
             titleLevels: mergedTitleLevels
         };
 
         merged.settings = {
-            bootSeen: newer.settings.bootSeen || older.settings.bootSeen,
-            guestStarted: newer.settings.guestStarted || older.settings.guestStarted
+            bootSeen: left.settings.bootSeen || right.settings.bootSeen,
+            guestStarted: left.settings.guestStarted || right.settings.guestStarted
         };
 
         merged.updatedAt = Math.max(newer.updatedAt, older.updatedAt);

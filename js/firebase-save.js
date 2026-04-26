@@ -68,9 +68,28 @@ function getErrorCode(error) {
     return error?.code || error?.statusText || error?.message || "unknown";
 }
 
+function getErrorMessage(error) {
+    return String(error?.message || error?.payload?.error?.message || "");
+}
+
+function isFirestoreApiDisabled(error) {
+    return error?.status === 403 && /Cloud Firestore API|firestore\.googleapis\.com|has not been used|it is disabled/i.test(getErrorMessage(error));
+}
+
 function isRetriableError(error) {
+    if (isFirestoreApiDisabled(error)) return false;
     const code = getErrorCode(error);
     return ["offline", "network", "timeout"].includes(code) || Number(error?.status || 0) >= 500;
+}
+
+function getUserFacingErrorStatus(error, { forHydrate = false } = {}) {
+    const code = getErrorCode(error);
+
+    if (isFirestoreApiDisabled(error)) return "Firestore API 未啟用，請先啟用雲端存檔";
+    if (code === "offline") return forHydrate ? "目前離線，暫時使用本機存檔" : "目前離線，已排隊等待連線";
+    if (code === "timeout") return forHydrate ? "雲端讀取逾時，目前使用本機存檔" : "同步逾時，已保留並等待重試";
+    if (error?.status === 403 || code === "PERMISSION_DENIED") return "雲端權限不足，請檢查 Firestore 規則";
+    return forHydrate ? "雲端讀取失敗，目前使用本機存檔" : `同步失敗 (${code})`;
 }
 
 function makeFirestoreUrl(uid, { patch = false } = {}) {
@@ -317,21 +336,25 @@ async function flushSaveQueue() {
 
         if (!queuedData) queuedData = snapshot;
 
-        const errorCode = getErrorCode(error);
-        const label = errorCode === "timeout"
-            ? "同步逾時，已排隊重試"
-            : `同步失敗 (${errorCode})，已排隊重試`;
+        const retriable = isRetriableError(error);
+        const label = retriable
+            ? `${getUserFacingErrorStatus(error)}，已排隊重試`
+            : getUserFacingErrorStatus(error);
         setStatus(label, "error");
 
         if (!syncFailureNotified) {
             syncFailureNotified = true;
-            const userMsg = isRetriableError(error)
+            const userMsg = isFirestoreApiDisabled(error)
+                ? "Firebase 專案尚未啟用 Cloud Firestore API，本機進度已保留"
+                : retriable
                 ? "雲端連線不穩，資料已保留並會自動重試"
-                : `同步錯誤: ${errorCode}`;
-            showMessage(userMsg, isRetriableError(error) ? "info" : "error");
+                : getUserFacingErrorStatus(error);
+            showMessage(userMsg, retriable ? "info" : "error");
         }
 
-        scheduleRetry();
+        if (retriable) {
+            scheduleRetry();
+        }
     } finally {
         syncInFlight = false;
         if (requeueAfterSync) {
@@ -364,14 +387,6 @@ function queueSave(nextData) {
     saveTimer = setTimeout(() => {
         void flushSaveQueue();
     }, 1200);
-}
-
-function getHydrateErrorStatus(error) {
-    const code = getErrorCode(error);
-    if (code === "offline") return "目前離線，暫時使用本機存檔";
-    if (code === "timeout") return "雲端讀取逾時，目前使用本機存檔";
-    if (error?.status === 403 || code === "PERMISSION_DENIED") return "雲端權限不足，請檢查 Firestore 規則";
-    return "雲端讀取失敗，目前使用本機存檔";
 }
 
 async function hydrateCloudSave(user, retryCount = 0) {
@@ -438,8 +453,13 @@ async function hydrateCloudSave(user, retryCount = 0) {
             return false;
         }
 
-        setStatus(getHydrateErrorStatus(error), "error");
-        showMessage("雲端同步暫時未完成，本機進度已保留", "info");
+        setStatus(getUserFacingErrorStatus(error, { forHydrate: true }), "error");
+        showMessage(
+            isFirestoreApiDisabled(error)
+                ? "Firebase 專案尚未啟用 Cloud Firestore API，本機進度已保留"
+                : "雲端同步暫時未完成，本機進度已保留",
+            isFirestoreApiDisabled(error) ? "error" : "info"
+        );
         return false;
     } finally {
         syncInFlight = false;

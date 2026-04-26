@@ -93,24 +93,30 @@ function shouldFallbackToRedirect(error) {
 
 async function loginWithGoogle() {
     try {
-        if (isMobileDevice() || isStandaloneApp()) {
-            showMessage("即將開啟 Google 登入頁面，完成後會自動返回遊戲。");
-            await signInWithRedirect(auth, provider);
-            return;
-        }
+        // 優先嘗試使用彈窗登入 (signInWithPopup)
+        // 在行動裝置（尤其是 iOS Safari）上，這通常比重新導向更可靠，且能避免 sessionStorage 遺失的問題
         await signInWithPopup(auth, provider);
     } catch (error) {
-        console.error(error);
-        if (shouldFallbackToRedirect(error)) {
+        console.error("Auth Error:", error);
+        
+        // 如果是彈窗被阻擋 (popup-blocked) 或環境不支援彈窗，則嘗試降級使用重新導向
+        if (shouldFallbackToRedirect(error) || error.code === "auth/popup-blocked") {
             try {
-                showMessage("目前改用重新導向登入，請完成 Google 驗證後返回遊戲。");
+                // 如果在 PWA 模式下，提醒使用者重新導向可能會跳出 App
+                if (isStandaloneApp()) {
+                    showMessage("目前的環境需要跳轉頁面進行驗證，請在完成後返回遊戲。");
+                } else {
+                    showMessage("即將跳轉至 Google 登入頁面...");
+                }
                 await signInWithRedirect(auth, provider);
             } catch (redirectError) {
-                console.error(redirectError);
+                console.error("Redirect Error:", redirectError);
                 showMessage(getAuthErrorMessage(redirectError), "error");
             }
             return;
         }
+        
+        // 其他類型的錯誤直接顯示
         showMessage(getAuthErrorMessage(error), "error");
     }
 }

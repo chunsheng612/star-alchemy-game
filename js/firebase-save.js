@@ -7,14 +7,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 
-const firebaseApp = window.firebaseAuth?.firebaseApp;
-const auth = window.firebaseAuth?.auth;
+let db = null;
+let auth = null;
 
-if (!firebaseApp || !auth) {
-    throw new Error("Firebase Auth must be initialized before Firestore sync.");
-}
-
-const db = getFirestore(firebaseApp);
 const els = {
     status: document.getElementById("cloud-save-status"),
     detail: document.getElementById("cloud-save-status-detail")
@@ -27,6 +22,19 @@ let syncInFlight = false;
 let requeueAfterSync = false;
 let syncFailureNotified = false;
 let lastSyncSucceeded = false;
+let statusTimeout = null;
+
+function ensureFirebase() {
+    if (db && auth) return true;
+    const fb = window.firebaseAuth;
+    if (fb?.firebaseApp && fb?.auth) {
+        // Only import these once we are sure FB is ready to avoid module evaluation errors
+        db = getFirestore(fb.firebaseApp);
+        auth = fb.auth;
+        return true;
+    }
+    return false;
+}
 
 function showMessage(text, type = "info") {
     if (window.app && typeof window.app.showMessage === "function") {
@@ -35,26 +43,42 @@ function showMessage(text, type = "info") {
 }
 
 function setStatus(text, tone = "") {
+    const timeStr = (tone === "success") 
+        ? ` (${new Date().toLocaleTimeString([], { hour12: false })})` 
+        : "";
+    
     [els.status, els.detail].forEach((node) => {
         if (!node) return;
-        node.textContent = text;
+        node.textContent = text + timeStr;
         node.className = `cloud-save-status${tone ? ` is-${tone}` : ""}`;
     });
+
+    // Safety timeout: if stuck in 'busy' for more than 15s, revert to neutral
+    clearTimeout(statusTimeout);
+    if (tone === "busy") {
+        statusTimeout = setTimeout(() => {
+            if (syncInFlight) {
+                console.warn("Sync seems stuck, resetting status view.");
+                setStatus("同步反應較慢，請確認網路", "error");
+            }
+        }, 15000);
+    }
 }
 
 function getSaveRef(uid) {
+    if (!ensureFirebase()) return null;
     return doc(db, "users", uid, "game", "save");
 }
 
-/**
- * Perform actual Firestore write
- * @param {string} uid User ID
- * @param {object} payload Serialized data
- */
 async function persistCloudData(uid, payload) {
-    if (!uid || !payload) return;
+    if (!uid || !payload || !ensureFirebase()) return;
 
-    await setDoc(
+    // Create a 10-second timeout promise
+    const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Cloud write timeout (10s)")), 10000)
+    );
+
+    const savePromise = setDoc(
         getSaveRef(uid),
         {
             saveData: payload,
@@ -63,10 +87,13 @@ async function persistCloudData(uid, payload) {
         },
         { merge: true }
     );
+
+    // Race between save and timeout
+    await Promise.race([savePromise, timeoutPromise]);
 }
 
 async function flushSaveQueue() {
-    if (!activeUid || !queuedData || !window.app) {
+    if (!activeUid || !queuedData || !window.app || !ensureFirebase()) {
         syncInFlight = false;
         return false;
     }
@@ -86,20 +113,26 @@ async function flushSaveQueue() {
         syncFailureNotified = false;
         lastSyncSucceeded = true;
         setStatus("雲端已同步", "success");
-    } catch (error) {
-        console.error("Cloud save sync failed:", error);
-        lastSyncSucceeded = false;
-        setStatus("雲端同步失敗，稍後會再試", "error");
         
-        // Put back in queue if it wasn't replaced by newer data
+        setTimeout(() => {
+            if (!syncInFlight && !queuedData) {
+                setStatus("雲端已同步", "");
+            }
+        }, 5000);
+    } catch (error) {
+        console.error("Cloud save sync failed or timed out:", error);
+        lastSyncSucceeded = false;
+        
+        const isTimeout = error.message?.includes("timeout");
+        setStatus(isTimeout ? "雲端同步超時，稍後重試" : "雲端同步失敗，稍後重試", "error");
+        
         if (!queuedData) queuedData = snapshot;
         
         if (!syncFailureNotified) {
             syncFailureNotified = true;
-            showMessage("雲端同步失敗，請確認網路連線", "error");
+            showMessage(isTimeout ? "雲端連線較慢，正在背景重試" : "雲端同步失敗，請確認網路連線", "error");
         }
         
-        // Retry later
         clearTimeout(saveTimer);
         saveTimer = setTimeout(() => {
             void flushSaveQueue();
@@ -122,26 +155,18 @@ function queueSave(nextData) {
         return;
     }
 
-    // Capture snapshot immediately
     queuedData = window.app.getSerializableData(nextData);
-    
-    // If not currently syncing, show busy status and schedule
-    if (!syncInFlight) {
-        setStatus("雲端同步中…", "busy");
-    }
+    setStatus("雲端同步中…", "busy");
 
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
         void flushSaveQueue();
-    }, 1000);
+    }, 1200);
 }
 
 async function hydrateCloudSave(user) {
-    if (!user || !window.app) return;
-    if (syncInFlight) {
-        // If a sync is already happening (unlikely during boot/auth change), wait or skip
-        // For hydration, we usually want to finish this first.
-    }
+    if (!user || !window.app || !ensureFirebase()) return;
+    if (syncInFlight) return;
 
     activeUid = user.uid;
     syncInFlight = true;
@@ -155,16 +180,16 @@ async function hydrateCloudSave(user) {
         const cloudData = snap.exists() ? snap.data()?.saveData || null : null;
 
         if (!cloudData) {
-            // New cloud user, upload local data
             await persistCloudData(user.uid, localData);
             setStatus("已建立雲端存檔", "success");
-            syncInFlight = false;
+            setTimeout(() => {
+                if (!syncInFlight) setStatus("雲端已同步", "");
+            }, 5000);
             return;
         }
 
         const mergedData = window.app.mergeSaveData(localData, cloudData);
         const localJson = JSON.stringify(window.app.normalizeData(localData));
-        const cloudJson = JSON.stringify(window.app.normalizeData(cloudData));
         const mergedJson = JSON.stringify(mergedData);
 
         if (mergedJson !== localJson) {
@@ -173,20 +198,24 @@ async function hydrateCloudSave(user) {
             });
         }
 
-        if (mergedJson !== cloudJson) {
-            // Cloud needs update after merge
+        if (JSON.stringify(mergedData) !== JSON.stringify(cloudData)) {
             await persistCloudData(user.uid, mergedData);
         }
 
         setStatus("雲端已同步", "success");
         syncFailureNotified = false;
+        
+        setTimeout(() => {
+            if (!syncInFlight && !queuedData) {
+                setStatus("雲端已同步", "");
+            }
+        }, 5000);
     } catch (error) {
         console.error("Cloud save hydrate failed:", error);
         setStatus("雲端讀取失敗，目前使用本機存檔", "error");
         showMessage("雲端存檔讀取失敗，目前使用本機進度", "error");
     } finally {
         syncInFlight = false;
-        // Check if anything was queued during hydration
         if (requeueAfterSync) {
             requeueAfterSync = false;
             void flushSaveQueue();
@@ -207,18 +236,23 @@ window.cloudSave = {
     }
 };
 
-onAuthStateChanged(auth, async (user) => {
-    clearTimeout(saveTimer);
-    queuedData = null;
-    requeueAfterSync = false;
-    syncInFlight = false; // Reset on auth change
+// Use a recurring check for auth if it's not ready immediately
+const checkAuthInterval = setInterval(() => {
+    if (ensureFirebase()) {
+        clearInterval(checkAuthInterval);
+        onAuthStateChanged(auth, async (user) => {
+            clearTimeout(saveTimer);
+            queuedData = null;
+            requeueAfterSync = false;
+            syncInFlight = false;
 
-    if (!user) {
-        activeUid = null;
-        syncFailureNotified = false;
-        setStatus("未登入時僅保存在此裝置。");
-        return;
+            if (!user) {
+                activeUid = null;
+                syncFailureNotified = false;
+                setStatus("未登入時僅保存在此裝置。");
+                return;
+            }
+            await hydrateCloudSave(user);
+        });
     }
-
-    await hydrateCloudSave(user);
-});
+}, 500);

@@ -21,7 +21,7 @@ if (!firebaseConfig) {
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 auth.languageCode = "zh-TW";
-setPersistence(auth, browserLocalPersistence).catch(() => {
+const authReady = setPersistence(auth, browserLocalPersistence).catch(() => {
     // Keep default persistence if the environment refuses explicit local persistence.
 });
 
@@ -36,7 +36,9 @@ analyticsSupported().then((supported) => {
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: "select_account" });
 
-window.firebaseAuth = { firebaseApp, auth };
+let loginInProgress = false;
+
+window.firebaseAuth = { firebaseApp, auth, authReady, loginWithGoogle, logoutUser };
 
 const els = {
     guest: document.getElementById("auth-guest"),
@@ -91,8 +93,21 @@ function shouldFallbackToRedirect(error) {
     return isMobileDevice() && redirectReadyCodes.has(error?.code);
 }
 
+function setLoginButtonsBusy(isBusy) {
+    document.querySelectorAll("#btn-login-google, #btn-settings-login-google").forEach((button) => {
+        button.disabled = isBusy;
+        button.setAttribute("aria-busy", isBusy ? "true" : "false");
+    });
+}
+
 async function loginWithGoogle() {
+    if (loginInProgress) return;
+
+    loginInProgress = true;
+    setLoginButtonsBusy(true);
+
     try {
+        await authReady;
         // 優先嘗試使用彈窗登入 (signInWithPopup)
         // 在行動裝置（尤其是 iOS Safari）上，這通常比重新導向更可靠，且能避免 sessionStorage 遺失的問題
         await signInWithPopup(auth, provider);
@@ -118,6 +133,9 @@ async function loginWithGoogle() {
         
         // 其他類型的錯誤直接顯示
         showMessage(getAuthErrorMessage(error), "error");
+    } finally {
+        loginInProgress = false;
+        setLoginButtonsBusy(false);
     }
 }
 
@@ -187,7 +205,7 @@ if (els.logout) {
 }
 
 // 處理重新導向結果
-getRedirectResult(auth)
+authReady.then(() => getRedirectResult(auth))
     .then((result) => {
         if (result?.user) {
             showMessage("Google 登入完成");
@@ -200,5 +218,7 @@ getRedirectResult(auth)
     });
 
 onAuthStateChanged(auth, (user) => {
+    loginInProgress = false;
+    setLoginButtonsBusy(false);
     updateAuthUI(user);
 });

@@ -1,8 +1,9 @@
-const CACHE_NAME = "staralchemy-shell-v8";
-const ASSET_VERSION = "20260426-dailyfix2";
+const CACHE_NAME = "staralchemy-shell-v9";
+const ASSET_VERSION = "20260427-syncfix1";
 const CORE_ASSETS = [
     "./",
     "./index.html",
+    `./favicon.ico?v=${ASSET_VERSION}`,
     `./manifest.webmanifest?v=${ASSET_VERSION}`,
     `./css/style.css?v=${ASSET_VERSION}`,
     `./js/app.js?v=${ASSET_VERSION}`,

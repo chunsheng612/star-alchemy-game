@@ -2659,13 +2659,6 @@ class MagicAlchemyLab {
             }
         });
 
-        this.els.btnSettingsLoginGoogle = document.getElementById('btn-settings-login-google');
-        this.els.btnSettingsLoginGoogle?.addEventListener('click', () => {
-            if (window.audio) window.audio.playClick();
-            const originalLoginBtn = document.getElementById('btn-login-google');
-            if (originalLoginBtn) originalLoginBtn.click();
-        });
-
         this.els.btnQuit.addEventListener('click', () => {
             if (window.audio) window.audio.playClick();
             this.openConfirmModal({

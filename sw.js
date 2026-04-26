@@ -1,4 +1,4 @@
-const CACHE_NAME = "staralchemy-shell-v1";
+const CACHE_NAME = "staralchemy-shell-v2";
 const CORE_ASSETS = [
     "./",
     "./index.html",
@@ -50,6 +50,7 @@ self.addEventListener("fetch", (event) => {
     if (url.origin !== self.location.origin) return;
 
     const isDocument = request.mode === "navigate";
+    const isVersionSensitiveAsset = ["script", "style", "manifest", "worker"].includes(request.destination);
 
     if (isDocument) {
         event.respondWith(
@@ -60,6 +61,20 @@ self.addEventListener("fetch", (event) => {
                     return response;
                 })
                 .catch(() => caches.match("./index.html"))
+        );
+        return;
+    }
+
+    if (isVersionSensitiveAsset) {
+        event.respondWith(
+            fetch(request)
+                .then((response) => {
+                    if (!response || response.status !== 200) return response;
+                    const copy = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+                    return response;
+                })
+                .catch(() => caches.match(request))
         );
         return;
     }

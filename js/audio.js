@@ -24,31 +24,31 @@ class AudioController {
             hover: 'audio/sfx_button_hover.mp3',
             correct: 'audio/sfx_answer_correct.mp3',
             wrong: 'audio/sfx_answer_wrong.mp3',
-            skill: 'audio/audio/sfx_skill_cast.mp3',
-            shield: 'audio/audio/sfx_shield_block.mp3',
-            playerAttack: 'audio/audio/sfx_player_attack.mp3',
-            monsterAttack: 'audio/audio/sfx_monster_attack.mp3',
-            crit: 'audio/audio/sfx_attack_crit.mp3',
-            heal: 'audio/audio/sfx_heal_effect.mp3',
-            buff: 'audio/audio/sfx_buff_positive.mp3',
+            skill: null,
+            shield: null,
+            playerAttack: null,
+            monsterAttack: null,
+            crit: null,
+            heal: null,
+            buff: null,
             debuff: 'audio/sfx_debuff_negative.mp3',
             buy: 'audio/sfx_buy_item.mp3',
-            level: 'audio/audio/sfx_level_up.mp3',
-            poison: 'audio/audio/sfx_poison_tick.mp3',
-            fire: 'audio/audio/sfx_fire_effect.mp3',
+            level: null,
+            poison: null,
+            fire: null,
             ice: 'audio/sfx_ice_effect.mp3',
-            lose: 'audio/audio/sfx_battle_lose.mp3'
+            lose: null
         };
         this.bgmFiles = {
             hub: 'audio/bg-hub-game.mp3',
             shop: 'audio/bg-shop-Game.mp3',
             puzzle: 'audio/bg-Puzzle-Game.mp3',
-            final: 'audio/audio/bg-final-game.mp3'
+            final: null
         };
         this.ambienceFiles = {
-            breath: 'audio/audio/amb_room_breath.wav',
-            metal: 'audio/audio/amb_metal_creak.wav',
-            chime: 'audio/audio/amb_distant_chime.wav'
+            breath: null,
+            metal: null,
+            chime: null
         };
         this.sceneProfiles = {
             hub: {
@@ -86,17 +86,17 @@ class AudioController {
 
     preloadSfx() {
         Object.keys(this.sfxFiles).forEach(key => {
-            this.sfx[key] = this.createAudioElement(this.sfxFiles[key], { volume: 0.65 });
+            if(this.sfxFiles[key]) this.sfx[key] = this.createAudioElement(this.sfxFiles[key], { volume: 0.65 });
         });
     }
 
     preloadBackground() {
         Object.keys(this.bgmFiles).forEach(key => {
-            this.bgm[key] = this.createAudioElement(this.bgmFiles[key], { loop: true, volume: 0 });
+            if(this.bgmFiles[key]) this.bgm[key] = this.createAudioElement(this.bgmFiles[key], { loop: true, volume: 0 });
         });
 
         Object.keys(this.ambienceFiles).forEach(key => {
-            this.ambience[key] = this.createAudioElement(this.ambienceFiles[key], { volume: 0.35 });
+            if(this.ambienceFiles[key]) this.ambience[key] = this.createAudioElement(this.ambienceFiles[key], { volume: 0.35 });
         });
     }
 
@@ -121,16 +121,12 @@ class AudioController {
             this.sfxGain.gain.value = 0.9;
             this.ambientGain.gain.value = 0.28;
             this.sfxGain.connect(this.masterGain);
-            this.ambientGain.connect(this.masterGain);
             this.masterGain.connect(this.ctx.destination);
             this.initialized = true;
-            this.startAmbient(this.currentMode);
             this.startBackground(this.currentMode);
-            this.scheduleEnvironmentCue();
         } else if(this.ctx && this.ctx.state === 'suspended') {
             this.ctx.resume();
             this.startBackground(this.currentMode);
-            this.scheduleEnvironmentCue();
         }
     }
 
@@ -184,62 +180,6 @@ class AudioController {
     }
 
     startAmbient(mode = 'hub') {
-        if(!this.ctx || this.ambientNodes.length) {
-            this.setMusicMode(mode);
-            return;
-        }
-
-        const drone = this.ctx.createOscillator();
-        const droneGain = this.ctx.createGain();
-        drone.type = 'sine';
-        drone.frequency.value = 48;
-        droneGain.gain.value = 0.22;
-
-        const pulse = this.ctx.createOscillator();
-        const pulseGain = this.ctx.createGain();
-        pulse.type = 'triangle';
-        pulse.frequency.value = 96;
-        pulseGain.gain.value = 0.04;
-
-        const lfo = this.ctx.createOscillator();
-        const lfoGain = this.ctx.createGain();
-        lfo.type = 'sine';
-        lfo.frequency.value = 0.08;
-        lfoGain.gain.value = 6;
-        lfo.connect(lfoGain);
-        lfoGain.connect(drone.frequency);
-
-        const noiseBuffer = this.ctx.createBuffer(1, this.ctx.sampleRate * 2, this.ctx.sampleRate);
-        const data = noiseBuffer.getChannelData(0);
-        for(let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * 0.22;
-        const noise = this.ctx.createBufferSource();
-        const noiseFilter = this.ctx.createBiquadFilter();
-        const noiseGain = this.ctx.createGain();
-        noise.buffer = noiseBuffer;
-        noise.loop = true;
-        noiseFilter.type = 'lowpass';
-        noiseFilter.frequency.value = 520;
-        noiseGain.gain.value = 0.08;
-
-        drone.connect(droneGain);
-        pulse.connect(pulseGain);
-        noise.connect(noiseFilter);
-        noiseFilter.connect(noiseGain);
-        droneGain.connect(this.ambientGain);
-        pulseGain.connect(this.ambientGain);
-        noiseGain.connect(this.ambientGain);
-
-        drone.start();
-        pulse.start();
-        lfo.start();
-        noise.start();
-
-        this.ambientNodes = [
-            { node: drone, gain: droneGain, base: 48 },
-            { node: pulse, gain: pulseGain, base: 96 },
-            { node: noise, gain: noiseGain, filter: noiseFilter },
-            { node: lfo, gain: lfoGain }
-        ];
         this.setMusicMode(mode);
     }
 
@@ -307,27 +247,15 @@ class AudioController {
 
     scheduleEnvironmentCue() {
         if(this.envTimer) clearTimeout(this.envTimer);
-        if(!this.initialized) return;
-
-        const delay = 6500 + Math.random() * 9000;
-        this.envTimer = setTimeout(() => {
-            this.playEnvironmentCue();
-            this.scheduleEnvironmentCue();
-        }, delay);
+        this.envTimer = null;
     }
 
     playEnvironmentCue() {
-        if(!this.initialized || this.muted) return;
-        const names = Object.keys(this.ambience);
-        if(!names.length) return;
-        const name = names[Math.floor(Math.random() * names.length)];
-        const volume = this.sceneProfiles[this.currentMode]?.cueVolume || this.sceneProfiles.hub.cueVolume;
-        this.playAudioElement(this.ambience[name], volume, () => this.playEnvironmentFallback());
+        return;
     }
 
     playEnvironmentFallback() {
-        if(!this.initialized || this.muted) return;
-        this.playOscillator('sine', 90 + Math.random() * 60, 40 + Math.random() * 35, 1.2, 0.08);
+        return;
     }
 
     setMusicMode(mode) {
@@ -405,15 +333,15 @@ class AudioController {
     playScan() { this.playFile('skill', 0.5, () => this.playOscillator('sine', 1000, 2000, 0.22, 0.12)); }
     playSkill() { this.playFile('skill', 0.62, () => this.playOscillator('triangle', 220, 880, 0.55, 0.25)); }
     playScaffold() { this.playFile('ice', 0.55, () => this.playOscillator('triangle', 300, 600, 0.4, 0.2)); }
-    playShield() { this.playFile('shield', 0.65); }
-    playPlayerAttack() { this.playFile('playerAttack', 0.62); }
-    playMonsterAttack() { this.playFile('monsterAttack', 0.64); }
-    playCrit() { this.playFile('crit', 0.7); }
+    playShield() { this.playFile('shield', 0.65, () => this.playOscillator('sine', 260, 520, 0.28, 0.2, 'triangle')); }
+    playPlayerAttack() { this.playFile('playerAttack', 0.62, () => this.playOscillator('sawtooth', 520, 980, 0.16, 0.24)); }
+    playMonsterAttack() { this.playFile('monsterAttack', 0.64, () => this.playOscillator('square', 180, 80, 0.24, 0.26)); }
+    playCrit() { this.playFile('crit', 0.7, () => this.playOscillator('triangle', 760, 1520, 0.18, 0.32, 'sine')); }
     playLoot() { this.playFile('buy', 0.58); }
-    playHeal() { this.playFile('heal', 0.62); }
-    playBuff() { this.playFile('buff', 0.6); }
+    playHeal() { this.playFile('heal', 0.62, () => this.playOscillator('sine', 420, 840, 0.35, 0.18, 'triangle')); }
+    playBuff() { this.playFile('buff', 0.6, () => this.playOscillator('triangle', 360, 960, 0.3, 0.16)); }
     playDebuff() { this.playFile('debuff', 0.58); }
-    playLevelUp() { this.playFile('level', 0.7); }
+    playLevelUp() { this.playFile('level', 0.7, () => this.playOscillator('sine', 520, 1560, 0.45, 0.28, 'triangle')); }
     playItemUse(itemId) {
         if(['medkit', 'sedative'].includes(itemId)) this.playHeal();
         else if(['battery', 'eldritch_flesh', 'star_stone'].includes(itemId)) this.playBuff();

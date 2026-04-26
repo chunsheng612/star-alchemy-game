@@ -58,7 +58,7 @@ class ParticleEngine {
     }
 
     createExplosion(x, y, count = 20, options = {}) {
-        for(let i = 0; i < count; i++) {
+        for (let i = 0; i < count; i++) {
             this.createParticle({
                 x,
                 y,
@@ -126,19 +126,19 @@ class DialogueManager {
         this.textArea = document.getElementById('dialogue-text');
         this.nameArea = document.getElementById('dialogue-name');
         this.portrait = document.getElementById('dialogue-character-image');
-        
+
         this.scriptQueue = [];
         this.isPlaying = false;
-        
+
         this.dialogueBox.addEventListener('click', () => {
-            if(window.audio) window.audio.playClick();
+            if (window.audio) window.audio.playClick();
             this.next();
         });
     }
 
     play(lines, onComplete) {
-        if(!lines || lines.length===0) {
-            if(onComplete) onComplete();
+        if (!lines || lines.length === 0) {
+            if (onComplete) onComplete();
             return;
         }
         this.scriptQueue = [...lines];
@@ -179,7 +179,7 @@ class DialogueManager {
     }
 
     typeWriter(text) {
-        if(this.typingInterval) clearInterval(this.typingInterval);
+        if (this.typingInterval) clearInterval(this.typingInterval);
         this.textArea.innerHTML = '';
         let i = 0;
         this.typingInterval = setInterval(() => {
@@ -190,14 +190,14 @@ class DialogueManager {
     }
 
     finish() {
-        if(this.typingInterval) clearInterval(this.typingInterval);
+        if (this.typingInterval) clearInterval(this.typingInterval);
         this.overlay.classList.remove('show');
         this.isPlaying = false;
         if (this.onComplete) this.onComplete();
     }
 
     abort() {
-        if(this.typingInterval) clearInterval(this.typingInterval);
+        if (this.typingInterval) clearInterval(this.typingInterval);
         this.overlay.classList.remove('show');
         this.isPlaying = false;
         this.scriptQueue = [];
@@ -210,22 +210,22 @@ class QuestManager {
         this.widget = document.getElementById('quest-widget');
         this.descEl = document.getElementById('quest-desc');
         this.claimBtn = document.getElementById('btn-quest-claim');
-        
+
         this.quests = [
             { id: 'q1', text: '通關 1 次', rule: (data) => data.stats.wins >= 1, reward: 50 },
             { id: 'q2', text: '通關 5 次', rule: (data) => data.stats.wins >= 5, reward: 100 },
             { id: 'q3', text: '消耗 100 點精神力', rule: (data) => data.stats.manaSpent >= 100, reward: 150 },
             { id: 'q4', text: '累積獲得 15 顆星', rule: (data) => data.stats.stars >= 15, reward: 200 },
             { id: 'q5', text: '通過第 10 關', rule: (data) => data.highestLevel >= 11, reward: 400 },
-            { id: 'q6', text: '獲得鷹眼鑑定加成', rule: (data) => data.upgrades.eagleEye, reward: 250 },
+            { id: 'q6', text: '解鎖任一稱號', rule: (data) => (data.player?.unlockedTitles?.length || 1) >= 2, reward: 250 },
             { id: 'q7', text: '通過第 30 關', rule: (data) => data.highestLevel >= 31, reward: 1000 },
-            { id: 'q_max', text: '所有考核皆已通過', rule: ()=>false, reward: 0 }
+            { id: 'q_max', text: '所有考核皆已通過', rule: () => false, reward: 0 }
         ];
 
         this.claimBtn.addEventListener('click', (e) => {
-            if(!this.claimBtn.classList.contains('disabled')) {
+            if (!this.claimBtn.classList.contains('disabled')) {
                 const rect = e.target.getBoundingClientRect();
-                this.app.particles.createExplosion(rect.left + rect.width/2, rect.top + rect.height/2, 30);
+                this.app.particles.createExplosion(rect.left + rect.width / 2, rect.top + rect.height / 2, 30);
                 this.claimCurrent();
             }
         });
@@ -233,7 +233,7 @@ class QuestManager {
 
     getCurrentQuest() {
         const id = this.app.data.activeQuestId;
-        return this.quests.find(q => q.id === id) || this.quests[this.quests.length-1];
+        return this.quests.find(q => q.id === id) || this.quests[this.quests.length - 1];
     }
 
     check() {
@@ -258,13 +258,13 @@ class QuestManager {
     claimCurrent() {
         const q = this.getCurrentQuest();
         if (q.rule(this.app.data)) {
-            if(window.audio) window.audio.playLoot ? window.audio.playLoot() : window.audio.playSuccess();
+            if (window.audio) window.audio.playLoot ? window.audio.playLoot() : window.audio.playSuccess();
             this.app.data.coins += q.reward;
             this.app.showMessage(`任務達成！獲得 ${q.reward} 星幣`);
-            
+
             const idx = this.quests.findIndex(x => x.id === q.id);
-            if(idx < this.quests.length - 1) {
-                this.app.data.activeQuestId = this.quests[idx+1].id;
+            if (idx < this.quests.length - 1) {
+                this.app.data.activeQuestId = this.quests[idx + 1].id;
             }
             this.app.saveData();
             this.check();
@@ -275,6 +275,7 @@ class QuestManager {
 
 class MagicAlchemyLab {
     constructor() {
+        this.sessionStarted = false;
         // Essential DOM setup
         this.els = {
             appContainer: document.getElementById('app-container'),
@@ -288,6 +289,7 @@ class MagicAlchemyLab {
             greetingName: document.getElementById('greeting-name'),
             greetingText: document.getElementById('greeting-text'),
             views: document.querySelectorAll('.view-section'),
+            viewGame: document.getElementById('view-game'),
             globalHeader: document.getElementById('global-header'),
             headerTitle: document.getElementById('header-title'),
             globalCoins: document.getElementById('global-coins'),
@@ -297,7 +299,7 @@ class MagicAlchemyLab {
             hubTipText: document.getElementById('hub-tip-text'),
             btnHubTipShop: document.getElementById('btn-hub-tip-shop'),
             btnGuestStart: document.getElementById('btn-guest-start'),
-            btnStoryStart: document.getElementById('btn-story-start'),
+            btnHubHome: document.getElementById('btn-hub-home'),
             btnDailyStart: document.getElementById('btn-daily-start'),
             btnEndlessStart: document.getElementById('btn-endless-start'),
             hubPanels: Array.from(document.querySelectorAll('.hub-panel')),
@@ -305,6 +307,7 @@ class MagicAlchemyLab {
             storyProgressBadge: document.getElementById('story-progress-badge'),
             storyNextTitle: document.getElementById('story-next-title'),
             storyNextDesc: document.getElementById('story-next-desc'),
+            homeStoryCopy: document.getElementById('home-story-copy'),
             dailyTitle: document.getElementById('daily-title'),
             dailyDesc: document.getElementById('daily-desc'),
             dailyRuleLabel: document.getElementById('daily-rule-label'),
@@ -355,11 +358,33 @@ class MagicAlchemyLab {
             confirmDesc: document.getElementById('confirm-desc'),
             btnConfirmCancel: document.getElementById('btn-confirm-cancel'),
             btnConfirmOk: document.getElementById('btn-confirm-ok'),
+            characterModal: document.getElementById('character-modal'),
+            characterModalDesc: document.getElementById('character-modal-desc'),
+            btnCharacterClose: document.getElementById('btn-character-close'),
+            titleModal: document.getElementById('title-modal'),
+            titleModalDesc: document.getElementById('title-modal-desc'),
+            btnTitleClose: document.getElementById('btn-title-close'),
             settingsCloudTitle: document.getElementById('settings-cloud-title'),
             settingsCloudCopy: document.getElementById('settings-cloud-copy'),
             btnCloudSync: document.getElementById('btn-cloud-sync'),
+            btnDeleteData: document.getElementById('btn-delete-data'),
             slotsContainer: document.getElementById('slots-container'),
-            questWidget: document.getElementById('quest-widget')
+            questWidget: document.getElementById('quest-widget'),
+            combatStage: document.getElementById('combat-stage'),
+            gamePlayerImage: document.getElementById('game-player-image'),
+            gamePlayerName: document.getElementById('game-player-name'),
+            gamePlayerTitle: document.getElementById('game-player-title'),
+            combatModeTag: document.getElementById('combat-mode-tag'),
+            combatTimer: document.getElementById('combat-timer'),
+            combatTimerValue: document.getElementById('combat-timer-value'),
+            combatTimerFill: document.getElementById('combat-timer-fill'),
+            combatHp: document.getElementById('combat-hp'),
+            combatHpValue: document.getElementById('combat-hp-value'),
+            combatHpFill: document.getElementById('combat-hp-fill'),
+            combatEnemy: document.getElementById('combat-enemy'),
+            combatEnemyImage: document.getElementById('combat-enemy-image'),
+            combatEnemyName: document.getElementById('combat-enemy-name'),
+            combatEnemyCount: document.getElementById('combat-enemy-count')
         };
 
         // Greeting quotes for each character (used in boot greeting)
@@ -409,9 +434,15 @@ class MagicAlchemyLab {
         this.characters = this.getCharacterRoster();
 
         // ALWAYS USE V4 to prevent crashes from old save data missing objects.
-        this.storageKey = 'star_alchemy_save_v5';
+        this.storageKey = 'star_alchemy_save_v7';
+
+        // Auto-clear all old save versions to prevent stale data conflicts
+        Object.keys(localStorage)
+            .filter(k => k.startsWith('star_alchemy_') && k !== this.storageKey)
+            .forEach(k => localStorage.removeItem(k));
+
         this.data = this.loadData();
-        
+
         this.viewState = 'hub';
         this.previousView = 'hub';
         this.gameMode = null;
@@ -421,14 +452,15 @@ class MagicAlchemyLab {
         this.pendingConfirmAction = null;
         this.pendingConfirmCancelAction = null;
         this.currentUser = null;
-        this.activeHubPanel = 'story';
+        this.activeHubPanel = 'home';
         this.bootFinished = false;
         this.bootTimers = [];
+        this.combatTimerId = null;
         this.dailyChallenge = this.generateDailyChallenge();
         this.auditPuzzleCatalog();
         this.currentHubGreeter = 'iris';
         this._hubGreetingSeed = '';
-        
+
         this.particles = new ParticleEngine();
         this.dialogue = new DialogueManager(this);
         this.quests = new QuestManager(this);
@@ -563,6 +595,174 @@ class MagicAlchemyLab {
         };
     }
 
+    getPlayableCharacters() {
+        return [
+            {
+                id: 'female',
+                name: '露米娜',
+                gender: '女生',
+                role: '星燄煉金術師',
+                stages: [
+                    { label: '學徒袍', unlockLevel: 1, image: 'assets/chars/female_stage1.png' },
+                    { label: '街區調律裝', unlockLevel: 11, image: 'assets/chars/female_stage2.png' },
+                    { label: '邊境星冠裝', unlockLevel: 21, image: 'assets/chars/female_stage3.png' }
+                ]
+            },
+            {
+                id: 'male',
+                name: '亞斯特',
+                gender: '男生',
+                role: '月鋼煉金術師',
+                stages: [
+                    { label: '學徒袍', unlockLevel: 1, image: 'assets/chars/male_stage1.png' },
+                    { label: '街區調律裝', unlockLevel: 11, image: 'assets/chars/male_stage2.png' },
+                    { label: '邊境星冠裝', unlockLevel: 21, image: 'assets/chars/male_stage3.png' }
+                ]
+            }
+        ];
+    }
+
+    getTitleCatalog() {
+        return [
+            {
+                id: 'apprentice',
+                name: '見習煉金師',
+                cost: 0,
+                maxLevel: 1,
+                desc: '初始稱號，沒有額外加成。',
+                levelDesc: () => '初始稱號，沒有額外加成。',
+                effects: {},
+                levelEffects: () => ({})
+            },
+            {
+                id: 'frontier_focus',
+                name: '邊境專注者',
+                cost: 500,
+                maxLevel: 10,
+                desc: '故事委託精神力上限 +15。',
+                levelDesc: (lv) => `故事委託精神力上限 +${15 + (lv - 1) * 5}。`,
+                effects: { storyManaBonus: 15 },
+                levelEffects: (lv) => ({ storyManaBonus: 15 + (lv - 1) * 5 })
+            },
+            {
+                id: 'starlight_reader',
+                name: '星圖解讀者',
+                cost: 500,
+                maxLevel: 10,
+                desc: '每日挑戰精神力上限 +20。',
+                levelDesc: (lv) => `每日挑戰精神力上限 +${20 + (lv - 1) * 5}。`,
+                effects: { dailyManaBonus: 20 },
+                levelEffects: (lv) => ({ dailyManaBonus: 20 + (lv - 1) * 5 })
+            },
+            {
+                id: 'spell_duelist',
+                name: '咒語決鬥者',
+                cost: 500,
+                maxLevel: 10,
+                desc: '無盡討伐得分 +20%，HP +1。',
+                levelDesc: (lv) => `無盡討伐得分 +${20 + (lv - 1) * 5}%，HP +${1 + Math.floor((lv - 1) / 3)}。`,
+                effects: { endlessScoreBonus: 0.2, endlessHpBonus: 1 },
+                levelEffects: (lv) => ({ endlessScoreBonus: 0.2 + (lv - 1) * 0.05, endlessHpBonus: 1 + Math.floor((lv - 1) / 3) })
+            },
+            {
+                id: 'grand_alchemist',
+                name: '星冠煉金術師',
+                cost: 500,
+                maxLevel: 10,
+                desc: '故事與每日精神力 +10，無盡得分 +10%。',
+                levelDesc: (lv) => `故事與每日精神力 +${10 + (lv - 1) * 3}，無盡得分 +${10 + (lv - 1) * 3}%。`,
+                effects: { storyManaBonus: 10, dailyManaBonus: 10, endlessScoreBonus: 0.1 },
+                levelEffects: (lv) => ({ storyManaBonus: 10 + (lv - 1) * 3, dailyManaBonus: 10 + (lv - 1) * 3, endlessScoreBonus: 0.1 + (lv - 1) * 0.03 })
+            }
+        ];
+    }
+
+    getPlayableCharacter(id = this.data?.player?.selectedCharacter) {
+        const roster = this.getPlayableCharacters();
+        return roster.find((character) => character.id === id) || roster[0];
+    }
+
+    getPlayerStageIndex() {
+        if ((this.data?.highestLevel || 1) >= 21) return 2;
+        if ((this.data?.highestLevel || 1) >= 11) return 1;
+        return 0;
+    }
+
+    getPlayerStage(character = this.getPlayableCharacter()) {
+        const stageIndex = this.getPlayerStageIndex();
+        return character.stages[stageIndex] || character.stages[0];
+    }
+
+    getActiveTitle() {
+        const catalog = this.getTitleCatalog();
+        const title = catalog.find((t) => t.id === this.data?.player?.activeTitle) || catalog[0];
+        return title;
+    }
+
+    getActiveTitleLevel() {
+        return (this.data?.player?.titleLevels?.[this.data?.player?.activeTitle]) || 1;
+    }
+
+    getTitleLevel(titleId) {
+        return (this.data?.player?.titleLevels?.[titleId]) || 1;
+    }
+
+    getTitleUpgradeCost(titleId) {
+        const title = this.getTitleCatalog().find(t => t.id === titleId);
+        if (!title) return Infinity;
+        const currentLevel = this.getTitleLevel(titleId);
+        if (currentLevel >= (title.maxLevel || 10)) return Infinity;
+        // Level 1→2: 500*2^0=500, Level 2→3: 500*2^1=1000, Level 3→4: 500*2^2=2000 ...
+        return Math.floor(title.cost * Math.pow(2, currentLevel - 1));
+    }
+
+    getModeMaxMana(mode = this.gameMode) {
+        const title = this.getActiveTitle();
+        const level = this.getActiveTitleLevel();
+        const effects = title.levelEffects ? title.levelEffects(level) : (title.effects || {});
+        if (mode === 'story') return this.data.maxMana + (effects.storyManaBonus || 0);
+        if (mode === 'daily') return this.data.maxMana + (effects.dailyManaBonus || 0);
+        return this.data.maxMana;
+    }
+
+    getEndlessScoreMultiplier() {
+        const title = this.getActiveTitle();
+        const level = this.getActiveTitleLevel();
+        const effects = title.levelEffects ? title.levelEffects(level) : (title.effects || {});
+        return 1 + (effects.endlessScoreBonus || 0);
+    }
+
+    getEndlessMaxHp() {
+        const title = this.getActiveTitle();
+        const level = this.getActiveTitleLevel();
+        const effects = title.levelEffects ? title.levelEffects(level) : (title.effects || {});
+        return 3 + (effects.endlessHpBonus || 0);
+    }
+
+    getEndlessTimeLimit(slotCount = this.gameState.slotCount || 3) {
+        return Math.max(10, 23 - slotCount * 2);
+    }
+
+    getEnemyRoster() {
+        return [
+            { id: 'starry_slime', name: '星露史萊姆', image: 'assets/enemies/starry_slime.png' },
+            { id: 'cinder_fox', name: '燼火狐影', image: 'assets/enemies/cinder_fox.png' },
+            { id: 'leafy_dragon', name: '葉冠小龍', image: 'assets/enemies/leafy_dragon.png' },
+            { id: 'moonlight_owl', name: '月光梟', image: 'assets/enemies/moonlight_owl.png' },
+            { id: 'solar_sprite', name: '日曜精靈', image: 'assets/enemies/solar_sprite.png' },
+            { id: 'mist_jellyfish', name: '霧海水母', image: 'assets/enemies/mist_jellyfish.png' },
+            { id: 'crystal_turtle', name: '晶甲龜', image: 'assets/enemies/crystal_turtle.png' },
+            { id: 'shadow_cat', name: '影尾貓', image: 'assets/enemies/shadow_cat.png' },
+            { id: 'clockwork_bird', name: '齒輪鳥', image: 'assets/enemies/clockwork_bird.png' },
+            { id: 'cloud_sheep', name: '雲綿獸', image: 'assets/enemies/cloud_sheep.png' }
+        ];
+    }
+
+    getEnemyForOrder(orderCount = 1) {
+        const roster = this.getEnemyRoster();
+        return roster[(orderCount - 1) % roster.length];
+    }
+
     getCharacterProfile(id = 'iris') {
         return this.characters[id] || this.characters.iris;
     }
@@ -584,23 +784,27 @@ class MagicAlchemyLab {
         const remainingWeekly = Math.max(0, 7 - this.data.weekly.stamps.length);
 
         switch (panelId) {
+            case 'missions':
+                return nextLevel
+                    ? `任務清單已打開，下一張是第 ${nextLevel.id} 關「${nextLevel.title}」。`
+                    : '主線已全數結案，仍可重刷已解鎖委託。';
             case 'daily':
                 return todayRewardReady
-                    ? `先打每日挑戰可拿今日 500 星幣；下方的無限挑戰不限次數，每次成功固定 +10。`
-                    : `今日 500 星幣已領取，仍可刷每日與無限挑戰；本週再完成 ${remainingWeekly} 天可多拿 500。`;
+                    ? `先打每日挑戰可拿今日 500 星幣；無盡討伐會消耗 30 體力並累積得分。`
+                    : `今日 500 星幣已領取，仍可練每日或打無盡討伐；本週再完成 ${remainingWeekly} 天可多拿 500。`;
             case 'inventory':
                 return this.data.stamina >= 10
-                    ? `背包與夥伴狀態都在這裡，準備好後可直接從底部「故事」進選關。`
-                    : `目前體力 ${this.data.stamina}/100，先補給或改玩每日與無限挑戰都可以。`;
+                    ? `人物、稱號與背包強化都在這裡，稱號會直接影響故事、每日與無盡討伐。`
+                    : `目前體力 ${this.data.stamina}/100，可以先配置稱號，再補給或挑戰每日。`;
             case 'settings':
                 return this.currentUser
                     ? `已登入 ${this.currentUser.displayName || '玩家'}，進度會先保存在裝置，再自動同步雲端；需要時可手動上傳。`
                     : '目前是本機存檔模式；登入 Google 後，金幣、體力與關卡進度都會自動同步到雲端。';
-            case 'story':
+            case 'home':
             default:
                 return nextLevel
-                    ? `先從底部「故事」直接進選關，下一張是第 ${nextLevel.id} 關「${nextLevel.title}」。`
-                    : '主線已全數結案，現在可以重刷故事、每日與無限挑戰。';
+                    ? `底部中央「任務」會打開選關，下一張是第 ${nextLevel.id} 關「${nextLevel.title}」。`
+                    : '主線已全數結案，現在可以重刷任務、每日與無盡討伐。';
         }
     }
 
@@ -720,7 +924,7 @@ class MagicAlchemyLab {
                 text: opener
             }
         ];
-        
+
         if (stars === 3 && level.id % 4 === 0) {
             lines.push({
                 speaker: this.getCharacterProfile('rival').name,
@@ -733,7 +937,7 @@ class MagicAlchemyLab {
             lines.push({
                 speaker: this.getCharacterProfile('mentor').name,
                 portrait: this.getCharacterProfile('mentor').portraitClass,
-                text: `做得好。我一直都知道妳可以順利處理這種級別的難題。`
+                text: `做得好。我一直都知道你可以順利處理這種級別的難題。`
             });
             lines.push({
                 speaker: this.getCharacterProfile('iris').name,
@@ -775,7 +979,7 @@ class MagicAlchemyLab {
         lines.push({
             speaker: this.getCharacterProfile('mentor').name,
             portrait: this.getCharacterProfile('mentor').portraitClass,
-            text: `別氣餒，先去大廳休息一下，把剛才的失誤記錄下來，公會的卷宗隨時向妳開放。`
+            text: `別氣餒，先去大廳休息一下，把剛才的失誤記錄下來，公會的卷宗隨時向你開放。`
         });
 
         return lines;
@@ -809,16 +1013,18 @@ class MagicAlchemyLab {
         return {
             coins: 100,
             maxMana: 100,
+            maxStamina: 100,
             highestLevel: 1,
             levelStars: {},
             stamina: 100,
             lastEnergyTime: Date.now(),
             updatedAt: Date.now(),
             activeQuestId: 'q1',
-            upgrades: { eagleEye: false, sponsor: false },
-            stats: { wins: 0, manaSpent: 0, stars: 0, endlessPlayed: 0, coinsSpent: 0, dailyWins: 0 },
-            daily: { rewardDate: '', bestDate: '', bestTurns: 0, lastPlayedDate: '' },
+            upgrades: { shopLevels: {} },
+            stats: { wins: 0, manaSpent: 0, stars: 0, endlessPlayed: 0, coinsSpent: 0, dailyWins: 0, endlessBestScore: 0, endlessBestDefeated: 0 },
+            daily: { rewardDate: '', bestDate: '', bestTurns: 0, lastPlayedDate: '', playCount: 0 },
             weekly: { cycleStart: '', stamps: [], rewardClaimed: false },
+            player: { selectedCharacter: 'female', unlockedTitles: ['apprentice'], activeTitle: 'apprentice', titleLevels: {} },
             settings: { bootSeen: false, guestStarted: false }
         };
     }
@@ -841,20 +1047,21 @@ class MagicAlchemyLab {
             stats: { ...defaultData.stats, ...(source.stats || {}) },
             daily: { ...defaultData.daily, ...(source.daily || {}) },
             weekly: { ...defaultData.weekly, ...(source.weekly || {}) },
+            player: { ...defaultData.player, ...(source.player || {}) },
             settings: { ...defaultData.settings, ...(source.settings || {}) }
         };
 
         merged.coins = clampInt(merged.coins, defaultData.coins);
         merged.maxMana = clampInt(merged.maxMana, defaultData.maxMana, 20);
         merged.highestLevel = clampInt(merged.highestLevel, defaultData.highestLevel, 1);
-        merged.stamina = clampInt(merged.stamina, defaultData.stamina, 0, 100);
+        if (merged.maxStamina === undefined) merged.maxStamina = 100;
+        merged.stamina = clampInt(merged.stamina, defaultData.stamina, 0, merged.maxStamina);
         merged.lastEnergyTime = clampInt(merged.lastEnergyTime, now, 0, now);
         merged.updatedAt = clampInt(merged.updatedAt, now, 0, now);
         merged.activeQuestId = typeof merged.activeQuestId === 'string' ? merged.activeQuestId : defaultData.activeQuestId;
 
         merged.upgrades = {
-            eagleEye: Boolean(merged.upgrades.eagleEye),
-            sponsor: Boolean(merged.upgrades.sponsor)
+            shopLevels: (merged.upgrades && typeof merged.upgrades.shopLevels === 'object') ? merged.upgrades.shopLevels : {}
         };
 
         merged.stats = {
@@ -863,14 +1070,17 @@ class MagicAlchemyLab {
             stars: clampInt(merged.stats.stars, 0),
             endlessPlayed: clampInt(merged.stats.endlessPlayed, 0),
             coinsSpent: clampInt(merged.stats.coinsSpent, 0),
-            dailyWins: clampInt(merged.stats.dailyWins, 0)
+            dailyWins: clampInt(merged.stats.dailyWins, 0),
+            endlessBestScore: clampInt(merged.stats.endlessBestScore, 0),
+            endlessBestDefeated: clampInt(merged.stats.endlessBestDefeated, 0)
         };
 
         merged.daily = {
             rewardDate: typeof merged.daily.rewardDate === 'string' ? merged.daily.rewardDate : '',
             bestDate: typeof merged.daily.bestDate === 'string' ? merged.daily.bestDate : '',
             bestTurns: clampInt(merged.daily.bestTurns, 0),
-            lastPlayedDate: typeof merged.daily.lastPlayedDate === 'string' ? merged.daily.lastPlayedDate : ''
+            lastPlayedDate: typeof merged.daily.lastPlayedDate === 'string' ? merged.daily.lastPlayedDate : '',
+            playCount: clampInt(merged.daily.playCount, 0)
         };
 
         merged.weekly = {
@@ -879,6 +1089,21 @@ class MagicAlchemyLab {
                 ? merged.weekly.stamps.filter((stamp) => typeof stamp === 'string')
                 : [],
             rewardClaimed: Boolean(merged.weekly.rewardClaimed)
+        };
+
+        const playableIds = new Set(this.getPlayableCharacters().map((character) => character.id));
+        const titleIds = new Set(this.getTitleCatalog().map((title) => title.id));
+        const unlockedTitles = Array.isArray(merged.player.unlockedTitles)
+            ? merged.player.unlockedTitles.filter((titleId) => titleIds.has(titleId))
+            : [];
+        if (!unlockedTitles.includes('apprentice')) unlockedTitles.unshift('apprentice');
+
+        const titleLevels = (merged.player && typeof merged.player.titleLevels === 'object') ? merged.player.titleLevels : {};
+        merged.player = {
+            selectedCharacter: playableIds.has(merged.player.selectedCharacter) ? merged.player.selectedCharacter : defaultData.player.selectedCharacter,
+            unlockedTitles,
+            activeTitle: unlockedTitles.includes(merged.player.activeTitle) ? merged.player.activeTitle : 'apprentice',
+            titleLevels
         };
 
         merged.settings = {
@@ -890,10 +1115,10 @@ class MagicAlchemyLab {
             Object.entries(merged.levelStars).map(([levelId, stars]) => [levelId, clampInt(stars, 0, 0, 3)])
         );
 
-        if (merged.stamina < 100) {
+        if (merged.stamina < merged.maxStamina) {
             const elapsedMin = Math.floor((now - merged.lastEnergyTime) / 60000);
             if (elapsedMin > 0) {
-                merged.stamina = Math.min(100, merged.stamina + elapsedMin);
+                merged.stamina = Math.min(merged.maxStamina, merged.stamina + elapsedMin);
                 merged.lastEnergyTime += elapsedMin * 60000;
             }
         } else {
@@ -934,9 +1159,12 @@ class MagicAlchemyLab {
             merged.levelStars[levelId] = Math.max(newer.levelStars[levelId] || 0, older.levelStars[levelId] || 0);
         });
 
+        const mergedShopLevels = { ...(older.upgrades?.shopLevels || {}), ...(newer.upgrades?.shopLevels || {}) };
+        Object.keys(mergedShopLevels).forEach(k => {
+            mergedShopLevels[k] = Math.max(newer.upgrades?.shopLevels?.[k] || 0, older.upgrades?.shopLevels?.[k] || 0);
+        });
         merged.upgrades = {
-            eagleEye: newer.upgrades.eagleEye || older.upgrades.eagleEye,
-            sponsor: newer.upgrades.sponsor || older.upgrades.sponsor
+            shopLevels: mergedShopLevels
         };
 
         merged.stats = {
@@ -945,7 +1173,9 @@ class MagicAlchemyLab {
             stars: Math.max(newer.stats.stars, older.stats.stars),
             endlessPlayed: Math.max(newer.stats.endlessPlayed, older.stats.endlessPlayed),
             coinsSpent: Math.max(newer.stats.coinsSpent, older.stats.coinsSpent),
-            dailyWins: Math.max(newer.stats.dailyWins, older.stats.dailyWins)
+            dailyWins: Math.max(newer.stats.dailyWins, older.stats.dailyWins),
+            endlessBestScore: Math.max(newer.stats.endlessBestScore, older.stats.endlessBestScore),
+            endlessBestDefeated: Math.max(newer.stats.endlessBestDefeated, older.stats.endlessBestDefeated)
         };
 
         merged.daily = {
@@ -968,6 +1198,21 @@ class MagicAlchemyLab {
             rewardClaimed:
                 (newer.weekly.cycleStart === weeklyCycle && newer.weekly.rewardClaimed) ||
                 (older.weekly.cycleStart === weeklyCycle && older.weekly.rewardClaimed)
+        };
+
+        const mergedTitles = new Set([
+            ...(newer.player.unlockedTitles || []),
+            ...(older.player.unlockedTitles || [])
+        ]);
+        const mergedTitleLevels = { ...(older.player?.titleLevels || {}), ...(newer.player?.titleLevels || {}) };
+        Object.keys(mergedTitleLevels).forEach(k => {
+            mergedTitleLevels[k] = Math.max(newer.player?.titleLevels?.[k] || 0, older.player?.titleLevels?.[k] || 0);
+        });
+        merged.player = {
+            selectedCharacter: newer.player.selectedCharacter || older.player.selectedCharacter || 'female',
+            unlockedTitles: [...mergedTitles],
+            activeTitle: mergedTitles.has(newer.player.activeTitle) ? newer.player.activeTitle : 'apprentice',
+            titleLevels: mergedTitleLevels
         };
 
         merged.settings = {
@@ -1108,43 +1353,61 @@ class MagicAlchemyLab {
 
     getEndlessChallengePool(slotCount) {
         const rulesBySlot = {
+            3: ['unique', 'repeat-one', 'three-types', 'weighted', 'alternating', 'no-adjacent', 'palindrome'],
             4: ['unique', 'repeat-one', 'bookend', 'three-types', 'twin-pairs', 'weighted', 'alternating', 'no-adjacent', 'palindrome'],
-            5: ['repeat-one', 'three-types', 'bookend', 'weighted', 'split-pairs', 'no-adjacent', 'spectrum', 'palindrome', 'alternating'],
-            6: ['twin-pairs', 'three-types', 'weighted', 'no-adjacent', 'bookend', 'alternating', 'spectrum', 'palindrome', 'split-pairs', 'crown']
+            5: ['repeat-one', 'three-types', 'bookend', 'weighted', 'split-pairs', 'no-adjacent', 'spectrum', 'palindrome', 'alternating']
+        };
+        const labels = {
+            unique: '純度分離',
+            'repeat-one': '回火疊加',
+            'three-types': '三材濃縮',
+            bookend: '首尾鎖定',
+            'twin-pairs': '雙對共鳴',
+            'split-pairs': '雙對拆列',
+            weighted: '主材主導',
+            alternating: '交錯節拍',
+            'no-adjacent': '避鄰穩相',
+            spectrum: '全譜調和',
+            palindrome: '鏡面回文'
         };
         return (rulesBySlot[slotCount] || rulesBySlot[5]).map((rule) => ({
             rule,
-            ruleLabel: this.normalizePuzzleDefinition({ rule, slotCount }).clue ? this.levels.find((level) => level.rule === rule && level.slotCount === slotCount)?.ruleLabel || rule : rule
+            ruleLabel: this.levels.find((level) => level.rule === rule && level.slotCount === slotCount)?.ruleLabel || labels[rule] || rule
         }));
     }
 
     generateEndlessOrder(orderCount = 1) {
-        const slotCount = orderCount >= 9 ? 6 : orderCount >= 4 ? 5 : 4;
+        const slotCount = orderCount <= 3 ? 3 : orderCount <= 6 ? 4 : 5;
         const rng = this.createSeededRandom(`endless-${this.getDateKey()}-${orderCount}-${this.data.stats.endlessPlayed}`);
         const pool = this.getEndlessChallengePool(slotCount);
         const chosen = pool[Math.floor(rng() * pool.length)] || { rule: 'repeat-one', ruleLabel: '回火疊加' };
-        const title = slotCount >= 6 ? '邊境長夜演算' : slotCount >= 5 ? '連續壓力測試' : '工坊耐久試作';
+        const enemy = this.getEnemyForOrder(orderCount);
+        const title = slotCount >= 5 ? '五芒咒陣' : slotCount >= 4 ? '四象咒陣' : '三環咒陣';
         return this.normalizePuzzleDefinition({
             id: `endless-${orderCount}`,
             title: `${title} #${orderCount}`,
-            name: `無限挑戰 #${orderCount}`,
-            chapter: '無限挑戰',
-            client: '公會模擬演算',
-            request: '這是用來打發時間與磨練手感的自由演算，每次完成只會發放 10 星幣。',
+            name: `無盡討伐 #${orderCount}｜${enemy.name}`,
+            chapter: '無盡討伐',
+            client: enemy.name,
+            request: `在倒數歸零前組出正確咒語，命中後可直接擊敗 ${enemy.name}。`,
             rule: chosen.rule,
             ruleLabel: chosen.ruleLabel,
             slotCount,
-            intro: '模擬盤已展開，這裡不消耗體力，只看你能把節奏維持多久。',
-            perfect: '這輪演算很乾淨，像是整張盤面都被你提前看穿了。',
-            good: '這輪處理得不錯，節奏一直都在你的手上。',
-            rough: '雖然過了，但還有不少地方能壓得更漂亮。',
-            fail: '模擬盤散掉了，不過這本來就是拿來反覆練手感的。',
+            intro: '討伐盤已展開，現在要把配方當成咒語來施放。',
+            perfect: '咒語一擊命中，敵人還沒反應過來就被封回星砂。',
+            good: '咒語完成，戰線保持穩定。',
+            rough: '這一擊有些勉強，但敵人已經倒下。',
+            fail: '咒語中斷，敵人的反擊打亂了節奏。',
             clue: this.getRuleClue(chosen.rule, slotCount)
         });
     }
 
     canClaimDailyReward() {
         return this.data.daily.rewardDate !== this.dailyChallenge.dateKey;
+    }
+
+    getMaxStamina() {
+        return this.data.maxStamina || 100;
     }
 
     getMinutesUntilStaminaReady() {
@@ -1225,7 +1488,7 @@ class MagicAlchemyLab {
 
     loadData() {
         try {
-            const raw = localStorage.getItem(this.storageKey) || localStorage.getItem('star_alchemy_save_v4');
+            const raw = localStorage.getItem(this.storageKey);
             if (raw) {
                 return this.normalizeData(JSON.parse(raw));
             }
@@ -1272,6 +1535,20 @@ class MagicAlchemyLab {
         setTimeout(() => this.els.saveToast.classList.remove('show'), 2000);
     }
 
+    setModalActive(modal, active) {
+        if (!modal) return;
+        if (active) modal.hidden = false;
+        modal.classList.toggle('active', active);
+        modal.setAttribute('aria-hidden', active ? 'false' : 'true');
+        modal.inert = !active;
+        if (!active) modal.hidden = true;
+    }
+
+    closeResultModal() {
+        this.setModalActive(this.els.modal, false);
+        this.els.leaderboardBox?.classList.add('hidden');
+    }
+
     openConfirmModal({
         title = '確認',
         description = '您確定要執行此操作？',
@@ -1290,19 +1567,20 @@ class MagicAlchemyLab {
         this.els.btnConfirmOk.className = `btn ${okVariant === 'danger' ? 'btn-primary' : 'btn-primary'}`;
         this.els.btnConfirmOk.style.background = okVariant === 'danger' ? 'var(--color-error)' : 'var(--color-secondary)';
         this.els.btnConfirmOk.style.borderColor = okVariant === 'danger' ? 'var(--color-error)' : 'var(--color-secondary)';
-        this.els.confirmModal.classList.add('active');
+        this.setModalActive(this.els.confirmModal, true);
     }
 
     closeConfirmModal({ runCancel = false } = {}) {
-        this.els.confirmModal.classList.remove('active');
+        this.setModalActive(this.els.confirmModal, false);
         if (runCancel && this.pendingConfirmCancelAction) this.pendingConfirmCancelAction();
         this.pendingConfirmAction = null;
         this.pendingConfirmCancelAction = null;
     }
 
-    showStaminaHelp() {
-        const missing = Math.max(0, 10 - this.data.stamina);
-        const description = `開始故事委託需要 10 點體力，你目前只有 ${this.data.stamina}/100。\n每分鐘會自然恢復 1 點體力，或到商店花 60 金幣購買公會補給糖，立即恢復 30 點。\n如果想先練習，不耗體力的「每日挑戰」與「無限挑戰」都可立即遊玩。\n再補 ${missing} 點就能再次出發。`;
+    showStaminaHelp(required = 10) {
+        const missing = Math.max(0, required - this.data.stamina);
+        const targetText = required >= 30 ? '無盡討伐' : '故事委託';
+        const description = `開始${targetText}需要 ${required} 點體力，你目前只有 ${this.data.stamina}/${this.getMaxStamina()}。\n每分鐘會自然恢復 1 點體力，或到商店花 60 金幣購買公會補給糖，立即恢復 30 點。\n每日挑戰不消耗體力；無盡討伐會消耗 30 體力並累積分數。\n再補 ${missing} 點就能再次出發。`;
         this.openConfirmModal({
             title: '體力不足',
             description,
@@ -1346,13 +1624,13 @@ class MagicAlchemyLab {
         window.addEventListener('load', syncLayout);
         window.visualViewport?.addEventListener('resize', syncLayout);
         document.fonts?.ready.then(syncLayout);
-        
+
         // Stamina auto-regen logic
         setInterval(() => {
-            if (this.data.stamina < 100) {
+            if (this.data.stamina < this.getMaxStamina()) {
                 const elapsedMin = Math.floor((Date.now() - this.data.lastEnergyTime) / 60000);
                 if (elapsedMin > 0) {
-                    this.data.stamina = Math.min(100, this.data.stamina + elapsedMin);
+                    this.data.stamina = Math.min(this.getMaxStamina(), this.data.stamina + elapsedMin);
                     this.data.lastEnergyTime += elapsedMin * 60000;
                     this.saveData({ showToast: false });
                 }
@@ -1363,22 +1641,25 @@ class MagicAlchemyLab {
     }
 
     forceReturnHub() {
+        this.clearCombatTimer();
         this.dialogue.abort();
-        this._hubEnteredThisSession = true;
-        this.showLocation('hub');
-        this.renderMap();
+        this.activeHubPanel = 'home';
+        this.playTransitionOverlay(() => {
+            this.showLocation('hub');
+            this.renderMap();
+        });
     }
 
     enterStoryMap() {
         if (!this.currentUser) {
             this.data.settings.guestStarted = true;
         }
-        this._hubEnteredThisSession = true;
         this.requestFS();
         if (this.els.bootOverlay?.classList.contains('active')) {
             this.completeBootSequence();
         }
-        this.showLocation('map');
+        this.showLocation('hub');
+        this.showHubPanel('missions');
         this.renderMap();
     }
 
@@ -1411,10 +1692,35 @@ class MagicAlchemyLab {
         else if (window.audio?.setMusicMode) window.audio.setMusicMode(scene);
     }
 
+    resetViewportScroll(viewId = this.viewState) {
+        const root = document.scrollingElement || document.documentElement;
+        if (root) {
+            root.scrollTop = 0;
+            root.scrollLeft = 0;
+        }
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+
+        const activeView = document.getElementById(`view-${viewId}`);
+        if (activeView) {
+            activeView.scrollTop = 0;
+            activeView.scrollLeft = 0;
+        }
+    }
+
     showLocation(viewId) {
+        if (viewId === 'map') {
+            viewId = 'hub';
+            this.activeHubPanel = 'missions';
+        } else if (viewId === 'shop') {
+            viewId = 'hub';
+            this.activeHubPanel = 'shop';
+        }
+        if (this.viewState === 'game' && viewId !== 'game') this.clearCombatTimer();
+        if (viewId !== 'game') this.els.viewGame?.classList.remove('endless-battle');
         this.previousView = this.viewState;
         const outgoing = document.querySelector('.view-section.active-view');
         const incoming = document.getElementById(`view-${viewId}`);
+        if (!incoming) return;
 
         // Animate transition
         if (outgoing && outgoing !== incoming) {
@@ -1434,22 +1740,11 @@ class MagicAlchemyLab {
         this.updateScene(viewId);
 
         if (viewId === 'hub') {
-            this.els.globalHeader.classList.add('hidden');
             this.renderHubDashboard();
         } else if (viewId === 'game') {
             this.els.globalHeader.classList.add('hidden');
-        } else {
-            this.els.globalHeader.classList.remove('hidden');
-            this.els.headerTitle.textContent = viewId === 'map' ? '故事選關' : '黑市交涉';
-            if (viewId === 'shop') {
-                const hubNavButtons = this.els.hubBottomNav ? this.els.hubBottomNav.querySelectorAll('.hub-nav-btn') : [];
-                hubNavButtons.forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.hubTarget === 'shop');
-                });
-                this.renderShop();
-            }
         }
-        
+
         if (viewId === 'hub') {
             this.quests.check();
         } else {
@@ -1457,6 +1752,7 @@ class MagicAlchemyLab {
         }
 
         requestAnimationFrame(() => this.updateLayoutMetrics());
+        requestAnimationFrame(() => this.resetViewportScroll(viewId));
     }
 
     updateGlobalUI() {
@@ -1467,7 +1763,7 @@ class MagicAlchemyLab {
 
         if (this.data.stamina < 10) {
             const missing = 10 - this.data.stamina;
-            this.els.hubTipText.textContent = `故事委託需要 10 體力。你目前 ${this.data.stamina}/100，還差 ${missing} 點；約 ${this.getMinutesUntilStaminaReady()} 分鐘後可自然回到可出發狀態，也可去商店買補給糖立即回復 30 點。想先遊玩時，可改打不耗體力的每日或無限挑戰。`;
+            this.els.hubTipText.textContent = `故事委託需要 10 體力。你目前 ${this.data.stamina}/${this.getMaxStamina()}，還差 ${missing} 點；約 ${this.getMinutesUntilStaminaReady()} 分鐘後可自然回到可出發狀態，也可去商店買補給糖立即回復 30 點。每日挑戰不耗體力，無盡討伐需要 30 體力。`;
             this.els.hubTip.classList.remove('hidden');
         } else {
             this.els.hubTip.classList.add('hidden');
@@ -1475,11 +1771,7 @@ class MagicAlchemyLab {
     }
 
     getRewardRangeText() {
-        const rewards = [1, 2, 3].map(stars => {
-            let reward = 20 * stars;
-            if (this.data.upgrades.eagleEye) reward = Math.floor(reward * 1.1);
-            return reward;
-        });
+        const rewards = [1, 2, 3].map(stars => 20 * stars);
         return `${Math.min(...rewards)}-${Math.max(...rewards)} 星幣`;
     }
 
@@ -1503,85 +1795,108 @@ class MagicAlchemyLab {
             <p class="level-rule">${level.request}<br>${level.clue}</p>
             <p class="level-meta">${status.text}｜章節 ${chapterStep}/10｜報酬 ${this.getRewardRangeText()}</p>
             <div class="level-stars">
-                ${[1,2,3].map(i => `<img src="assets/icons/star.png" class="${i <= stars ? 'earned' : ''}" alt="評級星星">`).join('')}
+                ${[1, 2, 3].map(i => `<img src="assets/icons/star.png" class="${i <= stars ? 'earned' : ''}" alt="評級星星">`).join('')}
             </div>
         `;
     }
 
+    getShopItemLevel(itemId) {
+        return (this.data.upgrades.shopLevels?.[itemId]) || 0;
+    }
+
+    getShopItemCost(baseCost, itemId) {
+        const level = this.getShopItemLevel(itemId);
+        if (level >= 10) return Infinity;
+        return Math.floor(baseCost * Math.pow(2, level));
+    }
+
     getShopInventory() {
+        const staminaLevel = this.getShopItemLevel('staminaPack');
+        const manaUpLevel = this.getShopItemLevel('manaUp');
+        const manaUpHLevel = this.getShopItemLevel('manaUpH');
+        const maxStaminaUpLevel = this.getShopItemLevel('maxStaminaUp');
         return [
+            {
+                id: 'maxStaminaUp',
+                icon: '❤️',
+                name: '體魄鍛鍊',
+                desc: '永久增加體力上限 +30',
+                cost: this.getShopItemCost(1000, 'maxStaminaUp'),
+                repeat: true,
+                maxLevel: 10,
+                currentLevel: maxStaminaUpLevel,
+                category: '屬性',
+                tier: `能力提升｜Lv.${maxStaminaUpLevel + 1}`,
+                accent: 'premium',
+                disabled: () => maxStaminaUpLevel >= 10,
+                effectText: () => maxStaminaUpLevel >= 10 ? '已達最高等級' : `體力上限 ${this.getMaxStamina()} → ${this.getMaxStamina() + 30}`,
+                statusText: () => maxStaminaUpLevel >= 10 ? '已達最高等級' : '可重複鍛鍊',
+                action: () => {
+                    this.data.maxStamina = this.getMaxStamina() + 30;
+                    if (!this.data.upgrades.shopLevels) this.data.upgrades.shopLevels = {};
+                    this.data.upgrades.shopLevels['maxStaminaUp'] = (this.data.upgrades.shopLevels['maxStaminaUp'] || 0) + 1;
+                }
+            },
             {
                 id: 'staminaPack',
                 icon: '🧃',
                 name: '公會補給糖',
-                desc: `立即恢復 30 點體力（目前 ${this.data.stamina}/100）`,
+                desc: `立即恢復 30 點體力（目前 ${this.data.stamina}/${this.getMaxStamina()}）`,
                 cost: 60,
                 repeat: true,
+                maxLevel: Infinity,
+                currentLevel: 0,
                 category: '補給品',
-                tier: '即時回復',
+                tier: '即時回復｜一次性消耗品',
                 accent: 'supply',
-                disabled: () => this.data.stamina >= 100,
-                effectText: () => `體力 ${this.data.stamina} → ${Math.min(100, this.data.stamina + 30)}`,
-                statusText: () => this.data.stamina >= 100 ? '目前已滿體' : `還可補 ${100 - this.data.stamina} 點`,
-                action: () => this.data.stamina = Math.min(100, this.data.stamina + 30)
+                disabled: () => this.data.stamina >= this.getMaxStamina(),
+                effectText: () => `體力 ${this.data.stamina} → ${Math.min(this.getMaxStamina(), this.data.stamina + 30)}`,
+                statusText: () => this.data.stamina >= this.getMaxStamina() ? '目前已滿體' : `還可補 ${this.getMaxStamina() - this.data.stamina} 點`,
+                action: () => {
+                    this.data.stamina = Math.min(this.getMaxStamina(), this.data.stamina + 30);
+                }
             },
             {
                 id: 'manaUp',
                 icon: '🛠️',
                 name: '大釜擴容',
                 desc: '最大精神力上限 +20',
-                cost: 150,
+                cost: this.getShopItemCost(450, 'manaUp'),
                 repeat: true,
+                maxLevel: 10,
+                currentLevel: manaUpLevel,
                 category: '設備',
-                tier: '常規升級',
+                tier: `常規升級｜Lv.${manaUpLevel + 1}`,
                 accent: 'upgrade',
-                effectText: () => `精神力上限 ${this.data.maxMana} → ${this.data.maxMana + 20}`,
-                statusText: () => '可重複交涉',
-                action: () => this.data.maxMana += 20
+                disabled: () => manaUpLevel >= 10,
+                effectText: () => manaUpLevel >= 10 ? '已達最高等級' : `精神力上限 ${this.data.maxMana} → ${this.data.maxMana + 20}`,
+                statusText: () => manaUpLevel >= 10 ? '已達最高等級' : '可重複交涉',
+                action: () => {
+                    this.data.maxMana += 20;
+                    if (!this.data.upgrades.shopLevels) this.data.upgrades.shopLevels = {};
+                    this.data.upgrades.shopLevels['manaUp'] = (this.data.upgrades.shopLevels['manaUp'] || 0) + 1;
+                }
             },
             {
                 id: 'manaUpH',
                 icon: '🏺',
                 name: '頂級大釜組',
                 desc: '最大精神力上限 +50',
-                cost: 350,
+                cost: this.getShopItemCost(1050, 'manaUpH'),
                 repeat: true,
+                maxLevel: 10,
+                currentLevel: manaUpHLevel,
                 category: '設備',
-                tier: '高階套組',
+                tier: `高階套組｜Lv.${manaUpHLevel + 1}`,
                 accent: 'premium',
-                effectText: () => `精神力上限 ${this.data.maxMana} → ${this.data.maxMana + 50}`,
-                statusText: () => '適合中後段高壓委託',
-                action: () => this.data.maxMana += 50
-            },
-            {
-                id: 'eagleEye',
-                icon: '🦅',
-                name: '鷹眼鑑定',
-                desc: '結算金幣收益增加 10%',
-                cost: 500,
-                repeat: false,
-                category: '被動',
-                tier: '收益增幅',
-                accent: 'perk',
-                cond: ()=>!this.data.upgrades.eagleEye,
-                effectText: () => '委託結算收益 +10%',
-                statusText: () => '完成後將永久生效',
-                action: () => this.data.upgrades.eagleEye = true
-            },
-            {
-                id: 'sponsor',
-                icon: '📚',
-                name: '學苑贊助',
-                desc: '查閱文獻魔力基礎下降',
-                cost: 1000,
-                repeat: false,
-                category: '被動',
-                tier: '支援授權',
-                accent: 'perk',
-                cond: ()=>!this.data.upgrades.sponsor,
-                effectText: () => '查閱文獻基礎消耗 15 → 10',
-                statusText: () => '高壓關卡更容易保住精神力',
-                action: () => this.data.upgrades.sponsor = true
+                disabled: () => manaUpHLevel >= 10,
+                effectText: () => manaUpHLevel >= 10 ? '已達最高等級' : `精神力上限 ${this.data.maxMana} → ${this.data.maxMana + 50}`,
+                statusText: () => manaUpHLevel >= 10 ? '已達最高等級' : '適合中後段高壓委託',
+                action: () => {
+                    this.data.maxMana += 50;
+                    if (!this.data.upgrades.shopLevels) this.data.upgrades.shopLevels = {};
+                    this.data.upgrades.shopLevels['manaUpH'] = (this.data.upgrades.shopLevels['manaUpH'] || 0) + 1;
+                }
             }
         ];
     }
@@ -1596,14 +1911,23 @@ class MagicAlchemyLab {
     }
 
     getResultTopline(success, levelData = null) {
-        if (!success) return this.gameMode === 'endless' ? '無限挑戰結算' : '委託失敗報告';
+        if (!success) return this.gameMode === 'endless' ? '無盡討伐結算' : '委託失敗報告';
         if (this.gameMode === 'daily') return '每日挑戰結算';
-        if (this.gameMode === 'endless') return '無限挑戰結算';
+        if (this.gameMode === 'endless') return '無盡討伐結算';
         if (levelData) return `${levelData.chapter}｜委託評級`;
         return '委託評級';
     }
 
     getResultStats({ success, stars = 0, levelData = null }) {
+        if (this.gameMode === 'endless') {
+            return [
+                { label: '擊敗敵人', value: `${this.gameState.defeated || 0} 名` },
+                { label: '本場得分', value: `${this.gameState.score || 0}`, accent: 'accent' },
+                { label: '獲得星幣', value: `+${this.gameState.scoreCoins || 0}` },
+                { label: '最佳紀錄', value: `${this.data.stats.endlessBestScore || 0} 分` }
+            ];
+        }
+
         if (this.gameMode === 'daily') {
             if (success) {
                 return [
@@ -1645,10 +1969,10 @@ class MagicAlchemyLab {
                 ? '今日首通與本週七日結算都已完成，仍可重複挑戰練習。'
                 : this.gameState.dailyRewardGranted
                     ? '今日首通獎勵已封存，仍可重複挑戰練習。'
-                : '今天的正式獎勵已領取過，仍可反覆挑戰今天的校準題。';
+                    : '今天的正式獎勵已領取過，仍可反覆挑戰今天的校準題。';
         }
         if (this.gameMode === 'endless') {
-            return success ? '下一輪模擬盤已展開，還想繼續就直接接著打。' : '這輪手感先到這裡，回據點休息後隨時能再開新的無限挑戰。';
+            return success ? '下一名敵人正在進場。' : '回到據點後可以調整人物與稱號，再重新挑戰無盡討伐。';
         }
 
         if (!success) {
@@ -1657,7 +1981,7 @@ class MagicAlchemyLab {
 
         const nextLevel = levelData ? this.levels.find(lv => lv.id === levelData.id + 1) : null;
         if (nextLevel) return `下一張委託：${nextLevel.title}｜${nextLevel.slotCount} 格｜${nextLevel.ruleLabel}`;
-        if (this.data.highestLevel > 30) return '所有正式委託皆已結案，無盡挑戰權限已開啟。';
+        if (this.data.highestLevel > 30) return '所有正式委託皆已結案，無盡討伐權限已開啟。';
         return '本段委託已結案，請回公會等待下一份指派。';
     }
 
@@ -1679,7 +2003,7 @@ class MagicAlchemyLab {
         this.els.modalDesc.textContent = desc;
         this.els.modalStory.textContent = story;
         this.els.modalStars.innerHTML = stars > 0
-            ? [1,2,3].map(i => `<img src="assets/icons/star.png" class="${i <= stars ? 'earned' : ''}">`).join('')
+            ? [1, 2, 3].map(i => `<img src="assets/icons/star.png" class="${i <= stars ? 'earned' : ''}">`).join('')
             : '';
         this.els.modalStats.innerHTML = this.getResultStats({ success, stars, levelData })
             .map(stat => `
@@ -1700,7 +2024,7 @@ class MagicAlchemyLab {
             this.els.leaderboardBox.classList.add('hidden');
         }
 
-        this.els.modal.classList.add('active');
+        this.setModalActive(this.els.modal, true);
     }
 
     startBootSequence() {
@@ -1746,38 +2070,91 @@ class MagicAlchemyLab {
         this.currentUser = user || null;
         this.renderHomeSaveNote();
         this.renderSettingsPanel();
-        if (this._hubEnteredThisSession) {
-            this.refreshHubGuide({ panelId: this.activeHubPanel });
-        }
+        this.refreshHubGuide({ panelId: this.activeHubPanel });
     }
 
     enterHub() {
-        // Transition from start screen to game hub with animation
-        const hubEl = document.querySelector('#view-hub .hub-content');
-        if (hubEl) {
-            hubEl.classList.add('home-screen-exit');
-            setTimeout(() => {
-                hubEl.classList.remove('home-screen', 'home-screen-exit');
-                hubEl.classList.add('hub-hero-layout', 'hub-enter');
-                this.renderHubDashboard();
-                this.refreshHubGuide({ rerollCharacter: true, panelId: this.activeHubPanel });
-                setTimeout(() => hubEl.classList.remove('hub-enter'), 600);
-            }, 400);
-        }
+        this.activeHubPanel = 'home';
+        // Play transition overlay
+        this.playTransitionOverlay(() => {
+            this.showLocation('hub');
+            this.refreshHubGuide({ rerollCharacter: true, panelId: this.activeHubPanel });
+        });
     }
 
-    showHubPanel(panelId = 'story') {
-        const target = ['story', 'daily', 'inventory', 'settings'].includes(panelId) ? panelId : 'story';
+    playTransitionOverlay(callback, duration = 600) {
+        let overlay = document.getElementById('transition-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'transition-overlay';
+            document.body.appendChild(overlay);
+        }
+        overlay.classList.remove('transition-out');
+        overlay.classList.add('transition-in');
+        setTimeout(() => {
+            if (callback) callback();
+            overlay.classList.remove('transition-in');
+            overlay.classList.add('transition-out');
+            setTimeout(() => {
+                overlay.classList.remove('transition-out');
+            }, duration);
+        }, duration / 2);
+    }
+
+    showHubPanel(panelId = 'home') {
+        const target = ['home', 'missions', 'daily', 'inventory', 'settings', 'shop'].includes(panelId) ? panelId : 'home';
+        const previousPanel = this.activeHubPanel;
         this.activeHubPanel = target;
         const hubNavButtons = this.els.hubBottomNav ? this.els.hubBottomNav.querySelectorAll('.hub-nav-btn') : [];
 
+        const hubEl = document.querySelector('#view-hub .hub-content');
+        if (hubEl) {
+            hubEl.dataset.activePanel = target;
+        }
+
+        if (target === 'home') {
+            this.els.globalHeader.classList.add('hidden');
+        } else {
+            this.els.globalHeader.classList.remove('hidden');
+            const titles = { shop: '商店', missions: '任務', daily: '每日', inventory: '人物', settings: '設定' };
+            this.els.headerTitle.textContent = titles[target] || '邊境據點';
+        }
+
+        // Animate panel transition
+        const outgoingPanel = previousPanel !== target ? document.querySelector(`.hub-panel[data-panel="${previousPanel}"]`) : null;
+        const incomingPanel = document.querySelector(`.hub-panel[data-panel="${target}"]`);
+
         this.els.hubPanels.forEach(panel => {
-            panel.classList.toggle('active', panel.dataset.panel === target);
+            if (panel !== outgoingPanel && panel !== incomingPanel) {
+                panel.classList.remove('active', 'panel-exit', 'panel-enter');
+            }
         });
+
+        if (outgoingPanel && incomingPanel && outgoingPanel !== incomingPanel) {
+            outgoingPanel.classList.add('panel-exit');
+            incomingPanel.classList.remove('active');
+            incomingPanel.classList.add('panel-enter', 'active');
+            setTimeout(() => {
+                outgoingPanel.classList.remove('active', 'panel-exit');
+                incomingPanel.classList.remove('panel-enter');
+            }, 300);
+        } else {
+            this.els.hubPanels.forEach(panel => {
+                panel.classList.toggle('active', panel.dataset.panel === target);
+            });
+        }
 
         hubNavButtons.forEach(btn => {
             btn.classList.toggle('active', btn.dataset.hubTarget === target);
         });
+
+        if (this.els.btnHubHome) {
+            this.els.btnHubHome.classList.toggle('hidden', target === 'home');
+        }
+
+        if (target === 'shop') {
+            this.renderShop();
+        }
 
         this.refreshHubGuide({ panelId: target });
     }
@@ -1792,14 +2169,11 @@ class MagicAlchemyLab {
 
     renderDailyPanel() {
         if (!this.els.dailyTitle) return;
-
-        const rewardReady = this.canClaimDailyReward();
-        this.els.dailyTitle.textContent = `${this.dailyChallenge.title}｜${this.dailyChallenge.slotCount} 格`;
-        this.els.dailyDesc.textContent = `${this.dailyChallenge.clue} 不消耗體力，可不限次數挑戰；下方還有每次完成固定 +10 的無限挑戰。`;
+        const dc = this.dailyChallenge;
+        this.els.dailyTitle.textContent = `${dc.title}｜${dc.slotCount} 格`;
+        this.els.dailyDesc.textContent = `${this.dailyChallenge.clue} 每次挑戰消耗 5 體力，過關獲得 10 金幣。`;
         this.els.dailyRuleLabel.textContent = `${this.dailyChallenge.ruleLabel}｜${this.dailyChallenge.dateKey}`;
-        this.els.dailyRewardStatus.textContent = rewardReady
-            ? '今日首通可得 500 星幣'
-            : '今日獎勵已領取，仍可繼續練習';
+        this.els.dailyRewardStatus.textContent = `每次過關 10 金幣｜無盡最佳 ${this.data.stats.endlessBestScore || 0} 分`;
     }
 
     renderWeeklyCalendar() {
@@ -1834,65 +2208,204 @@ class MagicAlchemyLab {
 
     renderInventoryPanel() {
         if (!this.els.inventoryGrid) return;
-        const items = [
+        const selectedCharacter = this.getPlayableCharacter();
+        const selectedStage = this.getPlayerStage(selectedCharacter);
+        const activeTitle = this.getActiveTitle();
+        const activeTitleLevel = this.getActiveTitleLevel();
+
+        const statItems = [
             {
-                type: 'stat',
-                label: '體力儲量',
-                title: `${this.data.stamina}/100`,
-                text: this.data.stamina >= 10 ? '故事委託可直接出發。' : `還差 ${10 - this.data.stamina} 點才能再接主線。`
+                label: '名稱',
+                title: `${selectedCharacter.name}`,
+                text: `${selectedCharacter.role}`
             },
             {
-                type: 'stat',
+                label: '體力儲量',
+                title: `${this.data.stamina}/100`,
+                text: this.data.stamina >= 30 ? '故事與無盡討伐都可出發。' : `無盡討伐需要 30 體力，目前還差 ${Math.max(0, 30 - this.data.stamina)} 點。`
+            },
+            {
                 label: '大釜容量',
                 title: `${this.data.maxMana}`,
                 text: '精神力上限越高，容錯與嘗試次數就越多。'
             },
             {
-                type: 'stat',
-                label: '鷹眼鑑定',
-                title: this.data.upgrades.eagleEye ? '已啟用' : '未取得',
-                text: this.data.upgrades.eagleEye ? '委託結算收益會額外提高 10%。' : '在商店解鎖後，委託收益會更漂亮。'
-            },
-            {
-                type: 'stat',
-                label: '學苑贊助',
-                title: this.data.upgrades.sponsor ? '已啟用' : '未取得',
-                text: this.data.upgrades.sponsor ? '查閱文獻成本已降至更穩定的範圍。' : '開啟後，提示消耗會更低。'
+                label: '稱號',
+                title: `${activeTitle.name} Lv.${activeTitleLevel}`,
+                text: activeTitle.levelDesc ? activeTitle.levelDesc(activeTitleLevel) : activeTitle.desc,
+                isTitleStat: true
             }
         ];
-        const castCards = Object.values(this.characters).map((character) => ({
-            type: 'character',
-            label: character.role,
-            title: character.name,
-            text: character.summary,
-            image: character.image
-        }));
 
-        this.els.inventoryGrid.innerHTML = [...items, ...castCards].map((item) => {
-            if (item.type === 'character') {
-                return `
-                    <article class="inventory-card cast-card">
-                        <div class="portrait-frame">
-                            <img src="${item.image}" alt="${item.title}">
-                        </div>
-                        <div class="inventory-meta">
-                            <span class="inventory-label">${item.label}</span>
-                            <h3>${item.title}</h3>
-                            <p>${item.text}</p>
-                        </div>
-                    </article>
-                `;
-            }
+        const statCards = statItems.map((item) => `
+            <article class="inventory-card ${item.isTitleStat ? 'title-stat-card' : ''}" ${item.isTitleStat ? 'data-open-title-page="true"' : ''}>
+                <span class="inventory-label">${item.label}</span>
+                <div class="inventory-meta">
+                    <h3 class="inventory-value">${item.title}</h3>
+                    <p>${item.text}</p>
+                </div>
+                ${item.isTitleStat ? '<span class="title-tap-hint">點擊管理稱號 ▶</span>' : ''}
+            </article>
+        `).join('');
+
+        this.els.inventoryGrid.innerHTML = `
+            <div class="inv-split-layout">
+                <div class="inv-left" data-open-character-select="true">
+                    <img src="${selectedStage.image}" alt="${selectedCharacter.name}" class="inv-character-img">
+                    <span class="inv-char-tap-hint">點擊切換角色</span>
+                </div>
+                <div class="inv-right">
+                    ${statCards}
+                </div>
+            </div>
+        `;
+    }
+
+    openCharacterSelectModal() {
+        const characters = this.getPlayableCharacters();
+        const cards = characters.map((character) => {
+            const stage = this.getPlayerStage(character);
+            const isSelected = character.id === this.data.player.selectedCharacter;
             return `
-                <article class="inventory-card">
-                    <span class="inventory-label">${item.label}</span>
+                <div class="char-select-option ${isSelected ? 'selected' : ''}" data-pick-character="${character.id}">
+                    <img src="${stage.image}" alt="${character.name}">
+                    <strong>${character.name}</strong>
+                    <span>${character.gender}｜${stage.label}</span>
+                    ${isSelected ? '<em>使用中</em>' : ''}
+                </div>
+            `;
+        }).join('');
+
+        this.els.characterModalDesc.innerHTML = `<div class="char-select-grid">${cards}</div>`;
+        this.setModalActive(this.els.characterModal, true);
+
+        // Bind character selection
+        this.els.characterModalDesc.querySelectorAll('[data-pick-character]').forEach(el => {
+            el.addEventListener('click', () => {
+                if (window.audio) window.audio.playClick();
+                this.selectPlayableCharacter(el.dataset.pickCharacter);
+                this.setModalActive(this.els.characterModal, false);
+            });
+        });
+    }
+
+    openTitleUpgradePage() {
+        const catalog = this.getTitleCatalog();
+        const unlockedTitles = new Set(this.data.player.unlockedTitles);
+        const cards = catalog.map((title) => {
+            const isUnlocked = unlockedTitles.has(title.id);
+            const isActive = this.data.player.activeTitle === title.id;
+            const level = this.getTitleLevel(title.id);
+            const maxLevel = title.maxLevel || 10;
+            const atMax = level >= maxLevel;
+            const upgradeCost = this.getTitleUpgradeCost(title.id);
+            const canUpgrade = isUnlocked && !atMax && this.data.coins >= upgradeCost;
+            const canBuy = !isUnlocked && this.data.coins >= title.cost;
+            const desc = title.levelDesc ? title.levelDesc(level) : title.desc;
+
+            let actionButtons = '';
+            if (!isUnlocked) {
+                actionButtons = `<button class="menu-btn primary-btn" data-title-action="${title.id}" ${canBuy ? '' : 'disabled'}>解鎖 (${title.cost} 星幣)</button>`;
+            } else {
+                const equipBtn = `<button class="menu-btn" data-title-action="${title.id}" ${isActive ? 'disabled' : ''}>${isActive ? '已裝備' : '裝備'}</button>`;
+                let upgradeBtn = '';
+                if (!atMax) {
+                    upgradeBtn = `<button class="menu-btn primary-btn" data-title-upgrade="${title.id}" ${canUpgrade ? '' : 'disabled'}>升級 (${upgradeCost})</button>`;
+                } else {
+                    upgradeBtn = `<button class="menu-btn primary-btn" disabled>已滿級</button>`;
+                }
+                actionButtons = `<div class="title-actions" style="display:flex; gap:8px;">${equipBtn}${upgradeBtn}</div>`;
+            }
+
+            return `
+                <article class="inventory-card title-card ${isActive ? 'selected' : ''}">
+                    <span class="inventory-label">${isUnlocked ? `Lv.${level}/${maxLevel}` : '未解鎖'}</span>
                     <div class="inventory-meta">
-                        <h3 class="inventory-value">${item.title}</h3>
-                        <p>${item.text}</p>
+                        <h3>${title.name}</h3>
+                        <p>${desc}</p>
                     </div>
+                    ${actionButtons}
                 </article>
             `;
         }).join('');
+
+        this.els.titleModalDesc.innerHTML = `<div class="title-grid title-upgrade-grid">${cards}</div>`;
+        this.setModalActive(this.els.titleModal, true);
+
+        // Bind title actions
+        this.els.titleModalDesc.querySelectorAll('[data-title-action]').forEach(el => {
+            el.addEventListener('click', () => {
+                if (window.audio) window.audio.playClick();
+                this.unlockOrEquipTitle(el.dataset.titleAction);
+                this.setModalActive(this.els.titleModal, false);
+            });
+        });
+        this.els.titleModalDesc.querySelectorAll('[data-title-upgrade]').forEach(el => {
+            el.addEventListener('click', () => {
+                if (window.audio) window.audio.playClick();
+                this.upgradeTitleLevel(el.dataset.titleUpgrade);
+                this.setModalActive(this.els.titleModal, false);
+            });
+        });
+    }
+
+    upgradeTitleLevel(titleId) {
+        const title = this.getTitleCatalog().find(t => t.id === titleId);
+        if (!title) return;
+        if (!this.data.player.unlockedTitles.includes(titleId)) return;
+        const level = this.getTitleLevel(titleId);
+        const maxLevel = title.maxLevel || 10;
+        if (level >= maxLevel) {
+            this.showMessage('已達最高等級', 'error');
+            return;
+        }
+        const cost = this.getTitleUpgradeCost(titleId);
+        if (this.data.coins < cost) {
+            this.showMessage('星幣不足', 'error');
+            return;
+        }
+        this.data.coins -= cost;
+        this.data.stats.coinsSpent += cost;
+        if (!this.data.player.titleLevels) this.data.player.titleLevels = {};
+        this.data.player.titleLevels[titleId] = level + 1;
+        this.saveData();
+        this.renderInventoryPanel();
+        this.showMessage(`${title.name} 升級至 Lv.${level + 1}`);
+    }
+
+    selectPlayableCharacter(characterId) {
+        if (!this.getPlayableCharacters().some((character) => character.id === characterId)) return;
+        this.data.player.selectedCharacter = characterId;
+        this.saveData({ showToast: false });
+        this.renderInventoryPanel();
+        this.refreshHubGuide({ panelId: this.activeHubPanel });
+        this.showMessage('人物已切換');
+    }
+
+    unlockOrEquipTitle(titleId) {
+        const title = this.getTitleCatalog().find((item) => item.id === titleId);
+        if (!title) return;
+
+        if (this.data.player.unlockedTitles.includes(titleId)) {
+            this.data.player.activeTitle = titleId;
+            this.saveData({ showToast: false });
+            this.renderInventoryPanel();
+            this.showMessage(`已裝備稱號：${title.name}`);
+            return;
+        }
+
+        if (this.data.coins < title.cost) {
+            this.showMessage('星幣不足，無法解鎖稱號。', 'error');
+            return;
+        }
+
+        this.data.coins -= title.cost;
+        this.data.stats.coinsSpent += title.cost;
+        this.data.player.unlockedTitles.push(titleId);
+        this.data.player.activeTitle = titleId;
+        this.saveData();
+        this.renderInventoryPanel();
+        this.showMessage(`稱號解鎖：${title.name}`);
     }
 
     renderHomeSaveNote() {
@@ -1924,16 +2437,21 @@ class MagicAlchemyLab {
 
         // Toggle between start screen and game hub
         const hubEl = document.querySelector('#view-hub .hub-content');
-        if (hubEl) {
-            // Always show start screen on fresh page load (not yet entered hub this session)
-            if (!this._hubEnteredThisSession) {
+        const bottomNav = document.getElementById('hub-bottom-nav');
+        if (!this.sessionStarted) {
+            if (hubEl) {
                 hubEl.classList.add('home-screen');
-                hubEl.classList.remove('hub-hero-layout');
-                return; // Don't render hub panels until player enters
-            } else {
-                hubEl.classList.remove('home-screen');
+                hubEl.classList.remove('hub-hero-layout', 'home-screen-exit');
+            }
+            if (this.els.globalHeader) this.els.globalHeader.classList.add('hidden');
+            if (bottomNav) bottomNav.classList.add('hidden');
+        } else {
+            if (hubEl) {
+                hubEl.classList.remove('home-screen', 'home-screen-exit');
                 hubEl.classList.add('hub-hero-layout');
             }
+            if (bottomNav) bottomNav.classList.remove('hidden');
+            // globalHeader is managed by showHubPanel
         }
         this.dailyChallenge = this.generateDailyChallenge();
         this.syncWeeklyProgress();
@@ -1961,7 +2479,13 @@ class MagicAlchemyLab {
                 ? `${currentLevel.chapter}｜第 ${currentLevel.id} 關：${currentLevel.title}`
                 : '所有正式委託已封存';
         }
-        
+
+        if (this.els.homeStoryCopy) {
+            this.els.homeStoryCopy.textContent = hasStoryLeft
+                ? `${currentLevel.intro || '新的邊境委託已送達。'} ${currentLevel.request} 提示：${currentLevel.clue}`
+                : '主線故事已完成。可以從任務清單重玩已封存的委託，或挑戰每日與無盡討伐。';
+        }
+
         if (this.els.hubTaskText) {
             this.els.hubTaskText.textContent = hasStoryLeft
                 ? `我們得處理「${currentLevel.title}」這張委託了。`
@@ -1985,7 +2509,7 @@ class MagicAlchemyLab {
     bindEvents() {
         document.querySelectorAll('#view-hub .menu-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                if(window.audio) window.audio.playClick();
+                if (window.audio) window.audio.playClick();
                 const rect = btn.getBoundingClientRect();
                 this.particles.createExplosion(rect.left + rect.width / 2, rect.top + rect.height / 2, 10, {
                     variant: 'spark',
@@ -1997,63 +2521,62 @@ class MagicAlchemyLab {
         });
 
         this.els.btnHeroInteract?.addEventListener('click', () => {
-            if(window.audio) window.audio.playScan();
-            this.particles.createCelebration(window.innerWidth/2, window.innerHeight * 0.4);
+            if (window.audio) window.audio.playScan();
+            this.particles.createCelebration(window.innerWidth / 2, window.innerHeight * 0.4);
             this.refreshHubGuide({ rerollCharacter: true, panelId: this.activeHubPanel });
         });
 
         this.els.btnHubTipShop?.addEventListener('click', () => {
-            if(window.audio) window.audio.playClick();
+            if (window.audio) window.audio.playClick();
             this.showLocation('shop');
         });
 
+        this.els.btnHubHome?.addEventListener('click', () => {
+            if (window.audio) window.audio.playClick();
+            this.forceReturnHub();
+        });
+
         this.els.btnGuestStart?.addEventListener('click', () => {
-            if(window.audio) window.audio.playClick();
-            if (!this.currentUser) this.data.settings.guestStarted = true;
-            this._hubEnteredThisSession = true;
+            if (window.audio) window.audio.playClick();
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => { });
+            }
+            this.sessionStarted = true;
             this.saveData({ showToast: false });
             this.enterHub();
         });
 
-        this.els.btnStoryStart?.addEventListener('click', () => {
-            if(window.audio) window.audio.playClick();
-            this.enterStoryMap();
-        });
-
         this.els.btnDailyStart?.addEventListener('click', () => {
-            if(window.audio) window.audio.playClick();
+            if (window.audio) window.audio.playClick();
             this.startDailyChallenge();
         });
 
         this.els.btnEndlessStart?.addEventListener('click', () => {
-            if(window.audio) window.audio.playClick();
+            if (window.audio) window.audio.playClick();
             this.startEndless();
         });
 
-        this.els.btnMapShop?.addEventListener('click', () => {
-            if(window.audio) window.audio.playClick();
-            this.showLocation('shop');
+        this.els.btnCharacterClose?.addEventListener('click', () => {
+            if (window.audio) window.audio.playClick();
+            this.setModalActive(this.els.characterModal, false);
         });
 
-        this.els.btnMapDaily?.addEventListener('click', () => {
-            if(window.audio) window.audio.playClick();
-            this.startDailyChallenge();
+        this.els.btnTitleClose?.addEventListener('click', () => {
+            if (window.audio) window.audio.playClick();
+            this.setModalActive(this.els.titleModal, false);
         });
 
         this.els.hubBottomNav?.addEventListener('click', (e) => {
             const btn = e.target.closest('.hub-nav-btn');
             if (!btn) return;
-            if(window.audio) window.audio.playClick();
+
+            if (window.audio) window.audio.playClick();
             const target = btn.dataset.hubTarget;
             if (target === 'shop') {
-                this.showLocation('shop');
-                this.els.hubBottomNav.querySelectorAll('.hub-nav-btn').forEach(navBtn => {
-                    navBtn.classList.toggle('active', navBtn === btn);
-                });
+                this.showHubPanel('shop');
                 return;
             }
-            // "故事" button goes directly to level select map
-            if (target === 'story') {
+            if (target === 'missions') {
                 this.enterStoryMap();
                 return;
             }
@@ -2061,15 +2584,46 @@ class MagicAlchemyLab {
             this.showHubPanel(target);
         });
 
+        this.els.inventoryGrid?.addEventListener('click', (e) => {
+            const charSelect = e.target.closest('[data-open-character-select]');
+            if (charSelect) {
+                if (window.audio) window.audio.playClick();
+                this.openCharacterSelectModal();
+                return;
+            }
+
+            const titlePage = e.target.closest('[data-open-title-page]');
+            if (titlePage) {
+                if (window.audio) window.audio.playClick();
+                this.openTitleUpgradePage();
+            }
+        });
+
         this.els.btnToggleAudio?.addEventListener('click', () => {
-            if(window.audio) {
+            if (window.audio) {
                 const muted = window.audio.toggleMute();
                 this.showMessage(muted ? '背景音效已關閉' : '背景音效已開啟');
             }
         });
 
+        this.els.btnDeleteData?.addEventListener('click', () => {
+            if (window.audio) window.audio.playClick();
+            this.openConfirmModal({
+                title: '重置資料',
+                description: '確定要刪除所有本機資料並重新開始嗎？此操作無法撤銷。如果已登入 Google，下次登入時會恢復雲端資料。',
+                cancelText: '取消',
+                okText: '確定刪除',
+                okVariant: 'danger',
+                onOk: () => {
+                    localStorage.removeItem(this.storageKey);
+                    this.showMessage('資料已清除，正在重新啟動...', 'info');
+                    setTimeout(() => location.reload(), 1500);
+                }
+            });
+        });
+
         this.els.btnCloudSync?.addEventListener('click', async () => {
-            if(window.audio) window.audio.playClick();
+            if (window.audio) window.audio.playClick();
             if (!this.currentUser) {
                 this.showMessage('請先登入 Google 帳號後再上傳。', 'error');
                 return;
@@ -2084,17 +2638,26 @@ class MagicAlchemyLab {
         });
 
         this.els.btnGlobalBack.addEventListener('click', () => {
-            if(window.audio) window.audio.playClick();
-            if (this.viewState === 'shop' && this.previousView === 'map') {
-                this.showLocation('map');
-                this.renderMap();
-                return;
+            if (window.audio) window.audio.playClick();
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => { });
             }
-            this.forceReturnHub();
+            if (this.viewState === 'hub' && this.activeHubPanel !== 'home') {
+                this.showHubPanel('home');
+            } else {
+                this.forceReturnHub();
+            }
+        });
+
+        this.els.btnSettingsLoginGoogle = document.getElementById('btn-settings-login-google');
+        this.els.btnSettingsLoginGoogle?.addEventListener('click', () => {
+            if (window.audio) window.audio.playClick();
+            const originalLoginBtn = document.getElementById('btn-login-google');
+            if (originalLoginBtn) originalLoginBtn.click();
         });
 
         this.els.btnQuit.addEventListener('click', () => {
-            if(window.audio) window.audio.playClick();
+            if (window.audio) window.audio.playClick();
             this.openConfirmModal({
                 title: '確認',
                 description: '確定要撤退嗎？這將不會退還已消耗的體力。',
@@ -2103,22 +2666,18 @@ class MagicAlchemyLab {
                 okVariant: 'danger',
                 onOk: () => {
                     this.closeConfirmModal();
-                    if (this.gameMode === 'story' || this.gameMode === 'daily') {
-                        this.showLocation('map');
-                        this.renderMap();
-                    } else {
-                        this.forceReturnHub();
-                    }
+                    this.clearCombatTimer();
+                    this.forceReturnHub();
                 }
             });
         });
-        
+
         this.els.btnConfirmCancel.addEventListener('click', () => {
-            if(window.audio) window.audio.playClick();
+            if (window.audio) window.audio.playClick();
             this.closeConfirmModal({ runCancel: true });
         });
         this.els.btnConfirmOk.addEventListener('click', () => {
-            if(window.audio) window.audio.playClick();
+            if (window.audio) window.audio.playClick();
             if (this.pendingConfirmAction) {
                 this.pendingConfirmAction();
             } else {
@@ -2128,51 +2687,38 @@ class MagicAlchemyLab {
 
         this.els.palette.addEventListener('click', e => {
             const btn = e.target.closest('.palette-btn');
-            if(btn && !this.gameState.solved && !this.dialogue.isPlaying) this.handleIngredientTap(btn.dataset.id);
+            if (btn && !this.gameState.solved && !this.dialogue.isPlaying) this.handleIngredientTap(btn.dataset.id);
         });
 
         this.els.slotsContainer.addEventListener('click', (e) => {
             const slot = e.target.closest('.slot');
-            if(slot && !this.gameState.solved && !this.dialogue.isPlaying) {
+            if (slot && !this.gameState.solved && !this.dialogue.isPlaying) {
                 const idx = parseInt(slot.dataset.index);
                 if (this.gameState.hints.includes(idx)) return;
                 if (this.gameState.selectedSlot === idx && this.gameState.input[idx]) {
                     this.clearSlot(idx);
                 } else {
-                    if(window.audio) window.audio.playClick();
+                    if (window.audio) window.audio.playClick();
                     this.setSelectedSlot(idx);
                 }
             }
         });
 
         this.els.btnSubmit.addEventListener('click', () => {
-            if(!this.dialogue.isPlaying) this.submitPotion();
+            if (!this.dialogue.isPlaying) this.submitPotion();
         });
-        
+
         this.els.btnHint.addEventListener('click', () => {
-            if(!this.dialogue.isPlaying) this.useHint();
+            if (!this.dialogue.isPlaying) this.useHint();
         });
 
         this.els.btnModalAction.addEventListener('click', () => {
-            if(window.audio) window.audio.playClick();
-            this.els.modal.classList.remove('active');
+            if (window.audio) window.audio.playClick();
+            this.closeResultModal();
             if (this.gameState.gameOver) {
-                if (this.gameMode === 'story') {
-                    this.showLocation('map');
-                    this.renderMap();
-                } else {
-                    this.showLocation('map');
-                    this.renderMap();
-                }
+                this.forceReturnHub();
             } else {
-                if (this.gameMode === 'endless') this.nextEndlessOrder();
-                else if (this.gameMode === 'story') { 
-                    this.showLocation('map'); 
-                    this.renderMap(); 
-                } else {
-                    this.showLocation('map');
-                    this.renderMap();
-                }
+                this.forceReturnHub();
             }
         });
     }
@@ -2180,7 +2726,7 @@ class MagicAlchemyLab {
     renderMap() {
         if (this.els.btnMapDaily) {
             this.dailyChallenge = this.generateDailyChallenge();
-            this.els.btnMapDaily.textContent = this.canClaimDailyReward() ? '每日挑戰 +500' : '每日挑戰';
+            this.els.btnMapDaily.textContent = this.canClaimDailyReward() ? '每日挑戰 +500' : '每日 / 無盡';
         }
         this.els.levelGrid.innerHTML = '';
         let visibleIndex = 0;
@@ -2191,13 +2737,13 @@ class MagicAlchemyLab {
             const isNew = lv.id === this.data.highestLevel && this.data.highestLevel > this.lastHighestLevel;
             const stars = this.data.levelStars[lv.id] || 0;
             const card = document.createElement('div');
-            
+
             card.className = `level-card ${isNew ? 'new-level-glow' : ''}`;
             card.style.setProperty('--stagger-delay', `${Math.min(visibleIndex, 6) * 70}ms`);
             card.innerHTML = this.getLevelCardMarkup(lv, stars);
-            
+
             card.addEventListener('click', () => {
-                if(window.audio) window.audio.playClick();
+                if (window.audio) window.audio.playClick();
                 const rect = card.getBoundingClientRect();
                 this.particles.createExplosion(rect.left + rect.width / 2, rect.top + rect.height / 2, 14, {
                     variant: 'spark',
@@ -2209,10 +2755,10 @@ class MagicAlchemyLab {
             });
             this.els.levelGrid.appendChild(card);
             visibleIndex++;
-            
+
             if (isNew) {
                 // Remove glow after animation
-                setTimeout(()=>{ card.classList.remove('new-level-glow'); this.lastHighestLevel = this.data.highestLevel; }, 2600);
+                setTimeout(() => { card.classList.remove('new-level-glow'); this.lastHighestLevel = this.data.highestLevel; }, 2600);
             }
         });
     }
@@ -2221,7 +2767,7 @@ class MagicAlchemyLab {
         const items = this.getShopInventory();
         this.els.shopItems.innerHTML = '';
         items.forEach(item => {
-            if(item.repeat === false && item.cond && !item.cond()) return; // already bought unique
+            if (item.repeat === false && item.cond && !item.cond()) return; // already bought unique
 
             const div = document.createElement('div');
             div.className = 'shop-item';
@@ -2230,9 +2776,7 @@ class MagicAlchemyLab {
             const icon = item.icon || '🔮';
             const buttonLabel = disabled
                 ? '暫無需求'
-                : this.data.coins < item.cost
-                    ? '星幣不足'
-                    : `購買 ${item.cost}`;
+                : `售價 ${item.cost}`;
             div.innerHTML = `
                 <div class="shop-item-icon">${icon}</div>
                 <div class="shop-item-info">
@@ -2242,14 +2786,14 @@ class MagicAlchemyLab {
                     <p class="shop-item-meta">${item.effectText ? item.effectText() : item.desc}</p>
                     <p class="shop-item-meta">${item.statusText ? item.statusText() : '可立即購買'}</p>
                 </div>
-                <button class="buy-btn" data-id="${item.id}" ${(this.data.coins < item.cost || disabled) ? 'disabled':''}>
+                <button class="buy-btn" data-id="${item.id}" ${(this.data.coins < item.cost || disabled) ? 'disabled' : ''}>
                     <img src="assets/icons/coin.png" alt="星幣">${buttonLabel}
                 </button>
             `;
             const btn = div.querySelector('button');
             btn.addEventListener('click', () => {
-                if(this.data.coins >= item.cost && !disabled) {
-                    if(window.audio) window.audio.playLoot ? window.audio.playLoot() : window.audio.playSuccess();
+                if (this.data.coins >= item.cost && !disabled) {
+                    if (window.audio) window.audio.playLoot ? window.audio.playLoot() : window.audio.playSuccess();
                     const rect = btn.getBoundingClientRect();
                     this.particles.createCelebration(rect.left + rect.width / 2, rect.top + rect.height / 2);
                     this.data.coins -= item.cost;
@@ -2265,32 +2809,93 @@ class MagicAlchemyLab {
     }
 
     startDailyChallenge() {
-        this.dailyChallenge = this.generateDailyChallenge();
+        this.closeResultModal();
+        this.closeConfirmModal();
         this.activeHubPanel = 'daily';
-        this.data.daily.lastPlayedDate = this.dailyChallenge.dateKey;
+
+        // Each daily challenge costs 5 stamina
+        if (this.data.stamina < 5) {
+            this.showMessage('體力不足，每日挑戰需要 5 點體力。', 'error');
+            this.showStaminaHelp(5);
+            return;
+        }
+        this.data.stamina -= 5;
+
+        // Track play count for today
+        const dateKey = this.getDateKey();
+        if (this.data.daily.lastPlayedDate !== dateKey) {
+            this.data.daily.playCount = 0;
+        }
+        this.data.daily.playCount = (this.data.daily.playCount || 0) + 1;
+        this.data.daily.lastPlayedDate = dateKey;
+        const playCount = this.data.daily.playCount;
+
+        // First play uses today's fixed challenge, 2nd+ are random
+        let challenge;
+        if (playCount <= 1) {
+            challenge = this.generateDailyChallenge();
+        } else {
+            // Random challenge
+            const pool = this.getDailyChallengePool();
+            const chosen = pool[Math.floor(Math.random() * pool.length)];
+            const slotCount = 5;
+            challenge = this.normalizePuzzleDefinition({
+                id: `daily-${dateKey}-${playCount}`,
+                dateKey,
+                name: `每日挑戰｜${chosen.title}`,
+                title: chosen.title,
+                client: '每日星象演算',
+                request: '每日挑戰，每次消耗 5 體力，過關獲得 10 金幣。',
+                rule: chosen.rule,
+                ruleLabel: chosen.ruleLabel,
+                slotCount,
+                storyClue: this.getRuleClue(chosen.rule, slotCount),
+                chapter: '每日挑戰',
+                chapterIndex: 1,
+                intro: '',
+                perfect: '挑戰完成！',
+                good: '挑戰完成。',
+                rough: '勉強過關。',
+                fail: '挑戰失敗。'
+            });
+        }
+        this.dailyChallenge = challenge;
         this.saveData({ showToast: false });
 
         this.gameMode = 'daily';
         this.currentLevel = 0;
+        this.els.viewGame?.classList.remove('endless-battle');
         this.requestFS();
         this.showLocation('game');
-        this.gameState = { mana: this.data.maxMana, orderCount: 1, scoreCoins: 0, gameOver: false, hintPenalty: false, dailyRewardGranted: false, weeklyRewardGranted: false };
+        const maxMana = this.getModeMaxMana('daily');
+        this.gameState = { mana: maxMana, maxMana, orderCount: 1, scoreCoins: 0, gameOver: false, hintPenalty: false, dailyRewardGranted: false, weeklyRewardGranted: false };
         this.els.leaderboardBox.classList.add('hidden');
 
-        const lines = [
-            {
-                speaker: this.getCharacterProfile('scout').name,
-                portrait: this.getCharacterProfile('scout').portraitClass,
-                text: '今日挑戰已解封。這是模擬演算，不消耗體力，但今天只有第一次通關會發正式獎勵。'
-            },
-            {
-                speaker: this.getCharacterProfile('iris').name,
-                portrait: this.getCharacterProfile('iris').portraitClass,
-                text: `今天的題目是「${this.dailyChallenge.title}」。規格重點：${this.dailyChallenge.clue}`
-            }
-        ];
-
-        this.dialogue.play(lines, () => {
+        // Only show intro dialogue for the first play of the day
+        if (playCount <= 1) {
+            const lines = [
+                {
+                    speaker: this.getCharacterProfile('scout').name,
+                    portrait: this.getCharacterProfile('scout').portraitClass,
+                    text: '每日挑戰已解封。每次消耗 5 體力，過關獲得 10 金幣。'
+                },
+                {
+                    speaker: this.getCharacterProfile('iris').name,
+                    portrait: this.getCharacterProfile('iris').portraitClass,
+                    text: `今天的題目是「${this.dailyChallenge.title}」。規格重點：${this.dailyChallenge.clue}`
+                }
+            ];
+            this.dialogue.play(lines, () => {
+                this.setupBoard(
+                    this.dailyChallenge.name,
+                    `每日挑戰｜${this.dailyChallenge.ruleLabel}`,
+                    this.dailyChallenge.rule,
+                    this.dailyChallenge.slotCount,
+                    this.dailyChallenge
+                );
+            });
+        } else {
+            // 2nd+ play: go directly to board, no dialogue, no hints
             this.setupBoard(
                 this.dailyChallenge.name,
                 `每日挑戰｜${this.dailyChallenge.ruleLabel}`,
@@ -2298,34 +2903,52 @@ class MagicAlchemyLab {
                 this.dailyChallenge.slotCount,
                 this.dailyChallenge
             );
-        });
+        }
     }
 
-    startEndless() { 
-        this.data.stats.endlessPlayed++;
-        this.saveData({ showToast: false });
-        this.startGame('endless'); 
+    startEndless() {
+        this.startGame('endless');
     }
 
     startGame(mode, levelId = 1) {
-        const requiresStamina = mode === 'story';
-        if (requiresStamina && this.data.stamina < 10) {
+        this.closeResultModal();
+        this.closeConfirmModal();
+        const staminaCost = mode === 'endless' ? 30 : mode === 'story' ? 10 : 0;
+        if (staminaCost > 0 && this.data.stamina < staminaCost) {
             this.showMessage('體力不足，請先補充後再出發。', 'error');
-            this.showStaminaHelp();
+            this.showStaminaHelp(staminaCost);
             return;
         }
-        
-        if (requiresStamina) {
-            this.data.stamina -= 10;
+
+        if (staminaCost > 0) {
+            this.data.stamina -= staminaCost;
+            if (mode === 'endless') this.data.stats.endlessPlayed++;
             this.saveData({ showToast: false });
         }
-        
+
         this.gameMode = mode;
         this.currentLevel = levelId;
+        this.els.viewGame?.classList.toggle('endless-battle', mode === 'endless');
         this.requestFS();
-        this.showLocation('game');
+        this.playTransitionOverlay(() => {
+            this.showLocation('game');
+        });
 
-        this.gameState = { mana: this.data.maxMana, orderCount: 0, scoreCoins: 0, gameOver: false, hintPenalty: false, dailyRewardGranted: false, weeklyRewardGranted: false };
+        const maxMana = this.getModeMaxMana(mode);
+        this.gameState = {
+            mana: maxMana,
+            maxMana,
+            orderCount: 0,
+            defeated: 0,
+            score: 0,
+            scoreCoins: 0,
+            hp: this.getEndlessMaxHp(),
+            maxHp: this.getEndlessMaxHp(),
+            gameOver: false,
+            hintPenalty: false,
+            dailyRewardGranted: false,
+            weeklyRewardGranted: false
+        };
         this.els.leaderboardBox.classList.add('hidden');
 
         // Play story explicitly every time
@@ -2334,12 +2957,12 @@ class MagicAlchemyLab {
                 {
                     speaker: this.getCharacterProfile('scout').name,
                     portrait: this.getCharacterProfile('scout').portraitClass,
-                    text: '這是公會的無限挑戰模擬盤，不消耗體力，想練多久都可以。'
+                    text: '無盡討伐已開場。每場消耗 30 體力，敵人會在倒數結束時反擊。'
                 },
                 {
                     speaker: this.getCharacterProfile('iris').name,
                     portrait: this.getCharacterProfile('iris').portraitClass,
-                    text: '每完成一輪固定拿 10 星幣。就算只是打發時間，我也想把手感維持在最好。'
+                    text: '我要用完整咒語解開陣式。每擊敗一名敵人都會累積分數並回復部分精神力。'
                 }
             ], () => this.nextEndlessOrder());
         } else {
@@ -2349,13 +2972,15 @@ class MagicAlchemyLab {
     }
 
     nextEndlessOrder() {
+        if (this.gameState.gameOver) return;
         this.gameState.orderCount++;
-        this.gameState.mana = Math.min(this.data.maxMana, this.gameState.mana + 30);
         this.gameState.hintPenalty = false;
         const endlessOrder = this.generateEndlessOrder(this.gameState.orderCount);
+        this.gameState.currentEnemy = this.getEnemyForOrder(this.gameState.orderCount);
+        this.els.combatEnemy?.classList.remove('defeated', 'attacking');
         this.setupBoard(
             endlessOrder.name,
-            `無限挑戰｜${endlessOrder.ruleLabel}`,
+            `無盡討伐｜${endlessOrder.ruleLabel}`,
             endlessOrder.rule,
             endlessOrder.slotCount,
             endlessOrder
@@ -2367,24 +2992,168 @@ class MagicAlchemyLab {
         this.setupBoard(lv.name, `${lv.client}｜${lv.ruleLabel}`, lv.rule, lv.slotCount, lv);
     }
 
+    clearCombatTimer() {
+        if (this.combatTimerId) {
+            clearInterval(this.combatTimerId);
+            this.combatTimerId = null;
+        }
+    }
+
+    updatePlayerCombatPortrait() {
+        const character = this.getPlayableCharacter();
+        const stage = this.getPlayerStage(character);
+
+        if (this.els.gamePlayerImage) {
+            this.els.gamePlayerImage.src = stage.image;
+            this.els.gamePlayerImage.alt = character.name;
+        }
+        if (this.els.gamePlayerName) this.els.gamePlayerName.textContent = character.name;
+        if (this.els.gamePlayerTitle) this.els.gamePlayerTitle.textContent = '';
+    }
+
+    updateCombatStage() {
+        if (!this.els.combatStage) return;
+
+        this.updatePlayerCombatPortrait();
+        const isEndless = this.gameMode === 'endless';
+        this.els.viewGame?.classList.toggle('endless-battle', isEndless);
+        this.els.combatStage.classList.toggle('is-endless', isEndless);
+        this.els.combatModeTag.textContent = isEndless
+            ? `無盡討伐｜得分 ${this.gameState.score || 0}`
+            : this.gameMode === 'daily'
+                ? '每日挑戰'
+                : '故事委託';
+
+        this.els.combatTimer?.classList.toggle('hidden', !isEndless);
+        this.els.combatHp?.classList.toggle('hidden', !isEndless);
+        this.els.combatEnemy?.classList.toggle('hidden', !isEndless);
+
+        if (isEndless) {
+            this.updateEndlessHud();
+            this.updateEnemyUI();
+        }
+    }
+
+    updateEnemyUI() {
+        const enemy = this.gameState.currentEnemy || this.getEnemyForOrder(this.gameState.orderCount || 1);
+        if (this.els.combatEnemyImage) {
+            this.els.combatEnemyImage.src = enemy.image;
+            this.els.combatEnemyImage.alt = enemy.name;
+        }
+        if (this.els.combatEnemyName) this.els.combatEnemyName.textContent = enemy.name;
+        if (this.els.combatEnemyCount) {
+            this.els.combatEnemyCount.textContent = `第 ${this.gameState.orderCount || 1} 隻｜${this.gameState.slotCount || 3} 格咒語`;
+        }
+    }
+
+    updateEndlessHud() {
+        if (!this.gameState.maxHp) return;
+        const hpPct = Math.max(0, Math.min(100, (this.gameState.hp / this.gameState.maxHp) * 100));
+        if (this.els.combatHpValue) this.els.combatHpValue.textContent = `${this.gameState.hp} / ${this.gameState.maxHp}`;
+        if (this.els.combatHpFill) this.els.combatHpFill.style.width = `${hpPct}%`;
+
+        if (this.gameState.timeLimit && this.els.combatTimerFill) {
+            const timePct = Math.max(0, Math.min(100, (this.gameState.timeLeft / this.gameState.timeLimit) * 100));
+            this.els.combatTimerFill.style.width = `${timePct}%`;
+        }
+        if (this.els.combatTimerValue && Number.isFinite(this.gameState.timeLeft)) {
+            this.els.combatTimerValue.textContent = `${this.gameState.timeLeft}`;
+        }
+    }
+
+    startEndlessTimer() {
+        this.clearCombatTimer();
+        if (this.gameMode !== 'endless' || this.gameState.gameOver) return;
+
+        this.gameState.timeLimit = this.getEndlessTimeLimit(this.gameState.slotCount);
+        this.gameState.timeLeft = this.gameState.timeLimit;
+        this.updateEndlessHud();
+
+        this.combatTimerId = setInterval(() => {
+            if (this.gameMode !== 'endless' || this.gameState.solved || this.els.modal.classList.contains('active')) return;
+            this.gameState.timeLeft -= 1;
+            this.updateEndlessHud();
+            if (this.gameState.timeLeft <= 0) {
+                this.handleEndlessTimeout();
+            }
+        }, 1000);
+    }
+
+    handleEndlessTimeout() {
+        this.clearCombatTimer();
+        if (this.gameMode !== 'endless' || this.gameState.gameOver) return;
+
+        this.gameState.hp = Math.max(0, this.gameState.hp - 1);
+        this.gameState.input = this.gameState.input.map((value, index) => this.gameState.hints.includes(index) ? value : null);
+        this.els.combatEnemy?.classList.add('attacking');
+        this.els.combatStage?.querySelector('.combat-player')?.classList.add('taking-damage');
+
+        // Cute attack sparkle particles around enemy
+        const enemyEl = this.els.combatEnemy;
+        if (enemyEl) {
+            const rect = enemyEl.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height * 0.4;
+            this.particles.createExplosion(cx, cy, 15, {
+                variant: 'spark',
+                colors: ['#ff6b9d', '#ffd166', '#ff8fab', '#ffadca'],
+                distance: [20, 60],
+                minSize: 6,
+                maxSize: 14,
+                duration: 800
+            });
+            // Impact particles on player
+            setTimeout(() => {
+                const playerEl = this.els.combatStage?.querySelector('.combat-player');
+                if (playerEl) {
+                    const pr = playerEl.getBoundingClientRect();
+                    this.particles.createExplosion(pr.left + pr.width / 2, pr.top + pr.height / 2, 8, {
+                        variant: 'mist',
+                        colors: ['#ef476f', '#ffd6e0', '#ff8fab'],
+                        distance: [10, 30],
+                        minSize: 5,
+                        maxSize: 10,
+                        duration: 600
+                    });
+                }
+            }, 250);
+        }
+
+        setTimeout(() => {
+            this.els.combatStage?.querySelector('.combat-player')?.classList.remove('taking-damage');
+        }, 400);
+        if (window.audio) window.audio.playWarning ? window.audio.playWarning() : window.audio.playError();
+        this.showMessage('咒語逾時，敵人反擊！', 'error');
+        this.updateGameUI();
+
+        if (this.gameState.hp <= 0) {
+            this.handleGameOver('hp');
+            return;
+        }
+
+        setTimeout(() => {
+            this.els.combatEnemy?.classList.remove('attacking');
+            this.startEndlessTimer();
+        }, 700);
+    }
+
     setupBoard(title, desc, rule, slotCount = 5, levelData = null) {
+        this.clearCombatTimer();
         this.els.gameTitle.textContent = title;
         this.els.gameDesc.textContent = desc;
         this.gameState.slotCount = slotCount;
-        // Use level-specific seed to prevent duplicate answers across levels
-        const levelSeed = levelData?.id ? `level-${levelData.id}-${rule}-${slotCount}` : null;
-        const rng = levelSeed ? this.createSeededRandom(levelSeed) : Math.random;
-        this.gameState.secret = this.generateSecret(rule, slotCount, rng);
+        this.gameState.maxMana = this.gameState.maxMana || this.getModeMaxMana(this.gameMode);
+        this.gameState.secret = this.generateSecret(rule, slotCount, Math.random);
         this.gameState.input = Array(slotCount).fill(null);
         this.gameState.turn = 0;
         this.gameState.hints = [];
         this.gameState.solved = false;
         this.gameState.levelData = levelData;
         this.gameState.selectedSlot = 0;
-        
+
         // Setup visual slots dynamically
         this.els.slotsContainer.innerHTML = '';
-        for(let i=0; i<slotCount; i++) {
+        for (let i = 0; i < slotCount; i++) {
             const d = document.createElement('div');
             d.className = 'slot';
             d.dataset.index = i;
@@ -2393,11 +3162,16 @@ class MagicAlchemyLab {
         // Save current DOM slots references
         this.els.slots = Array.from(document.querySelectorAll('.slot'));
 
-        const hintText = levelData
-            ? `${levelData.ruleLabel}<br>${levelData.clue}<br><br>先點選要放置的格位，再點素材。`
-            : '等待輸入序列...<br>先點選格位，再點素材，精確的推理將是節省精神力的唯一出路。';
+        const hintText = this.gameMode === 'endless'
+            ? `${levelData.ruleLabel}<br>${levelData.clue}<br><br>試錯紀錄會顯示在這裡，每一次施放都會標出第幾次嘗試。`
+            : levelData
+                ? `${levelData.ruleLabel}<br>${levelData.clue}<br><br>先點選要放置的格位，再點素材。`
+                : '等待輸入序列...<br>先點選格位，再點素材，精確的推理將是節省精神力的唯一出路。';
         this.els.history.innerHTML = `<div class="empty-hint">${hintText}</div>`;
+        this.updateCombatStage();
         this.updateGameUI();
+        requestAnimationFrame(() => this.updateLayoutMetrics());
+        if (this.gameMode === 'endless') this.startEndlessTimer();
     }
 
     getNextSelectableSlot(startIndex = 0) {
@@ -2618,7 +3392,7 @@ class MagicAlchemyLab {
 
         if (!this.gameState.hints.includes(selected)) {
             this.gameState.input[selected] = id;
-            if(window.audio) window.audio.playScan();
+            if (window.audio) window.audio.playScan();
             const slotRect = this.els.slots[selected]?.getBoundingClientRect();
             if (slotRect) this.particles.createCauldronPulse(slotRect.left + slotRect.width / 2, slotRect.top + slotRect.height / 2);
             this.gameState.selectedSlot = this.getNextSelectableSlot(selected + 1);
@@ -2627,82 +3401,109 @@ class MagicAlchemyLab {
     }
 
     clearSlot(idx) {
-        if(this.gameState.hints.includes(idx)) return;
+        if (this.gameState.hints.includes(idx)) return;
         this.gameState.input[idx] = null;
         this.gameState.selectedSlot = idx;
-        if(window.audio) window.audio.playClick();
+        if (window.audio) window.audio.playClick();
         this.updateGameUI();
     }
 
     getHintCost() {
-        let base = 15;
-        if(this.data.upgrades.sponsor) base = 10;
-        return base + Math.floor(this.currentLevel/2);
+        let base = 30;
+        return base + Math.floor(this.currentLevel / 2);
+    }
+
+    getSubmitCost() {
+        if (this.gameMode === 'endless') return 6 + Math.max(0, (this.gameState.slotCount || 3) - 3) * 2;
+        if (this.gameMode === 'story' || this.gameMode === 'daily') return 5 + Math.floor((this.currentLevel || 1) / 5);
+        return 5;
     }
 
     useHint() {
         // Disabled logic for high levels > 25
-        if(this.currentLevel >= 26 && this.gameMode === 'story') {
+        if (this.currentLevel >= 26 && this.gameMode === 'story') {
             this.showMessage('高難度限制：查閱文獻已被公會封鎖！', 'error');
             return;
         }
-        
+
         const cost = this.getHintCost();
-        if(!this.consumeMana(cost)) return;
-        
-        const cands = Array.from({length: this.gameState.slotCount}, (_, idx) => idx).filter(i => !this.gameState.hints.includes(i));
-        if(!cands.length) return;
-        
+        if (!this.consumeMana(cost)) return;
+        if (this.gameMode === 'endless' && this.gameState.mana <= 0) {
+            this.handleGameOver();
+            return;
+        }
+
+        const cands = Array.from({ length: this.gameState.slotCount }, (_, idx) => idx).filter(i => !this.gameState.hints.includes(i));
+        if (!cands.length) return;
+
         this.gameState.hintPenalty = true;
         this.showMessage('動用查閱文獻：當局評分鎖定為 1 星', 'error');
 
-        const h = cands[Math.floor(Math.random()*cands.length)];
+        const h = cands[Math.floor(Math.random() * cands.length)];
         this.gameState.hints.push(h);
         this.gameState.input[h] = this.gameState.secret[h];
         if (this.gameState.selectedSlot === h) {
             this.gameState.selectedSlot = this.getNextSelectableSlot(h + 1);
         }
-        if(window.audio) window.audio.playScaffold();
+        if (window.audio) window.audio.playScaffold();
         const slotRect = this.els.slots[h]?.getBoundingClientRect();
         if (slotRect) this.particles.createExplosion(slotRect.left + slotRect.width / 2, slotRect.top + slotRect.height / 2, 10, { variant: 'spark', colors: ['#fff4bf', '#d8f3ff', '#f4d6ff'], distance: [18, 52], duration: 900 });
         this.updateGameUI();
     }
 
     submitPotion() {
-        if(this.gameState.input.some(s => s === null)) return;
+        if (this.gameState.input.some(s => s === null)) return;
 
-        let cost = 5;
-        if (this.gameMode === 'story' || this.gameMode === 'daily') {
-            cost = 5 + Math.floor((this.currentLevel || 1) / 5);
-        }
+        const cost = this.getSubmitCost();
 
-        if(!this.consumeMana(cost)) return;
+        if (!this.consumeMana(cost)) return;
 
         this.gameState.turn++;
         this.particles.createCauldronPulse(window.innerWidth / 2, window.innerHeight * 0.72);
+
+        this.els.combatStage?.querySelector('.combat-player')?.classList.add('attacking');
+        setTimeout(() => {
+            this.els.combatStage?.querySelector('.combat-player')?.classList.remove('attacking');
+        }, 320);
+
         const res = this.scoreGuess(this.gameState.input, this.gameState.secret);
         this.addHistoryRow([...this.gameState.input], res);
 
+        if (res.exact > 0) {
+            this.els.combatStage?.querySelector('.combat-player')?.classList.add('success');
+            setTimeout(() => {
+                this.els.combatStage?.querySelector('.combat-player')?.classList.remove('success');
+            }, 600);
+        }
+
+        if (res.exact > 0 && res.exact < this.gameState.slotCount) {
+            this.els.combatEnemy?.classList.add('taking-damage');
+            setTimeout(() => {
+                this.els.combatEnemy?.classList.remove('taking-damage');
+            }, 400);
+        }
+
         if (res.exact === this.gameState.slotCount) this.handleSolve();
         else {
-            if(window.audio) window.audio.playSkill();
+            if (window.audio) window.audio.playSkill();
             this.particles.createExplosion(window.innerWidth / 2, window.innerHeight * 0.45, 12, { variant: 'mist', colors: ['#a9def9', '#d0f4de', '#e4c1f9'], distance: [10, 55], minSize: 8, maxSize: 16, duration: 1400 });
-            this.gameState.input = this.gameState.input.map((v,i) => this.gameState.hints.includes(i) ? v : null);
+            this.gameState.input = this.gameState.input.map((v, i) => this.gameState.hints.includes(i) ? v : null);
             this.updateGameUI();
-            if(this.gameState.mana <= 0) this.handleGameOver();
+            if (this.gameState.mana <= 0) this.handleGameOver();
+            else if (this.gameMode === 'endless') this.startEndlessTimer();
         }
     }
 
     scoreGuess(guess, secret) {
         let exact = 0, partial = 0, gR = {}, sR = {};
-        for (let i=0; i<this.gameState.slotCount; i++) {
-            if(guess[i] === secret[i]) exact++;
+        for (let i = 0; i < this.gameState.slotCount; i++) {
+            if (guess[i] === secret[i]) exact++;
             else {
                 gR[guess[i]] = (gR[guess[i]] || 0) + 1;
                 sR[secret[i]] = (sR[secret[i]] || 0) + 1;
             }
         }
-        for(let k in gR) partial += Math.min(gR[k], sR[k]||0);
+        for (let k in gR) partial += Math.min(gR[k], sR[k] || 0);
         return { exact, partial };
     }
 
@@ -2716,25 +3517,61 @@ class MagicAlchemyLab {
         return true;
     }
 
-    handleSolve() {
+    handleEndlessVictory() {
+        this.clearCombatTimer();
         this.gameState.solved = true;
-        if(window.audio) window.audio.playSuccess();
-        this.particles.createCelebration(window.innerWidth/2, window.innerHeight * 0.38);
+        this.gameState.defeated++;
+        const timeBonus = Math.max(0, this.gameState.timeLeft || 0) * 6;
+        const baseScore = 80 + this.gameState.slotCount * 35 + timeBonus;
+        const scoreGain = Math.floor(baseScore * this.getEndlessScoreMultiplier());
+        const coinReward = Math.max(8, Math.floor(scoreGain / 35));
+        const manaRecovery = 10 + this.gameState.slotCount * 4 + Math.floor((this.gameState.timeLeft || 0) / 2);
+
+        this.gameState.score += scoreGain;
+        this.gameState.scoreCoins += coinReward;
+        this.gameState.mana = Math.min(this.gameState.maxMana, this.gameState.mana + manaRecovery);
+        this.data.coins += coinReward;
+        this.data.stats.endlessBestScore = Math.max(this.data.stats.endlessBestScore, this.gameState.score);
+        this.data.stats.endlessBestDefeated = Math.max(this.data.stats.endlessBestDefeated, this.gameState.defeated);
+        this.saveData({ showToast: false });
+
+        if (window.audio) window.audio.playSuccess();
+        this.els.combatEnemy?.classList.add('defeated');
+        this.particles.createCelebration(window.innerWidth * 0.72, window.innerHeight * 0.34);
+        this.showMessage(`擊敗 ${this.gameState.currentEnemy?.name || '敵人'}，+${scoreGain} 分，回復 ${manaRecovery} MP`);
+        this.updateGameUI();
+
+        setTimeout(() => {
+            if (!this.gameState.gameOver) this.nextEndlessOrder();
+        }, 900);
+    }
+
+    handleSolve() {
+        if (this.gameMode === 'endless') {
+            this.handleEndlessVictory();
+            return;
+        }
+
+        this.gameState.solved = true;
+        if (window.audio) window.audio.playSuccess();
+        this.particles.createCelebration(window.innerWidth / 2, window.innerHeight * 0.38);
         this.particles.createCelebration(window.innerWidth * 0.25, window.innerHeight * 0.3);
         this.particles.createCelebration(window.innerWidth * 0.75, window.innerHeight * 0.3);
         this.updateGameUI();
 
         let stars = 1;
-        if(!this.gameState.hintPenalty) {
+        if (!this.gameState.hintPenalty) {
             if (this.gameState.turn <= 3) stars = 3;
             else if (this.gameState.turn <= 6) stars = 2;
         }
 
         let reward = this.gameMode === 'endless' ? 10 : 20 * stars;
         if (this.gameMode === 'daily') {
-            reward = this.canClaimDailyReward() ? 500 : 0;
-        } else if (this.gameMode === 'story' && this.data.upgrades.eagleEye) {
-            reward = Math.floor(reward * 1.1);
+            if (this.canClaimDailyReward()) {
+                reward = 500;
+            } else {
+                reward = 10;
+            }
         }
         this.gameState.dailyRewardGranted = this.gameMode === 'daily' && reward > 0;
         this.gameState.weeklyRewardGranted = false;
@@ -2776,15 +3613,15 @@ class MagicAlchemyLab {
                 {
                     speaker: this.getCharacterProfile('scout').name,
                     portrait: this.getCharacterProfile('scout').portraitClass,
-                    text: reward > 0 ? '今日首通已封存，公會會在零點後重新發放下一筆獎勵。' : '今天的正式獎勵已領過了，但你仍可繼續重打這題。'
+                    text: '每日挑戰完成，10 金幣已入帳。你可以隨時再挑戰。'
                 },
                 {
                     speaker: this.getCharacterProfile('iris').name,
                     portrait: this.getCharacterProfile('iris').portraitClass,
-                    text: `這題我花了 ${this.gameState.turn} 回合。明天再來時，我還想把它壓得更乾淨。`
+                    text: `這題我花了 ${this.gameState.turn} 回合。繼續挑戰可以繼續積累經驗。`
                 }
             ];
-        } else if(this.gameState.hintPenalty) {
+        } else if (this.gameState.hintPenalty) {
             postStory = [
                 {
                     speaker: this.getCharacterProfile('mentor').name,
@@ -2816,27 +3653,31 @@ class MagicAlchemyLab {
                         ? `${levelData ? levelData.client : '委託人'} 的委託已完成，公會完成本次評級。`
                         : this.gameMode === 'daily'
                             ? this.gameState.weeklyRewardGranted
-                                ? '每日挑戰完成，今日首通與本週七日結算獎勵都已入帳。'
-                                : this.gameState.dailyRewardGranted
-                                    ? '每日挑戰已完成，500 星幣已入帳。'
-                                    : '每日挑戰已完成，但今日正式獎勵已領取過。'
-                        : '無限挑戰本輪完成，固定 10 星幣已入帳。',
+                                ? '每日挑戰完成，10 金幣與本週七日結算獎勵都已入帳。'
+                                : '每日挑戰完成，10 金幣已入帳。'
+                            : '無盡討伐本輪完成，得分與星幣已入帳。',
                     story: levelData
                         ? `${this.gameMode === 'daily' ? '每日題目回顧' : '委託回顧'}｜${levelData.request}${this.gameState.weeklyRewardGranted ? '｜本週七日蓋章完成 +500' : ''}`
                         : '本輪配方已記錄進防衛紀錄冊。',
                     stars,
                     reward,
-                    actionText: this.gameMode === 'story' ? '返回委託面板' : this.gameMode === 'daily' ? '回到據點' : '下一輪挑戰',
+                    actionText: this.gameMode === 'story' ? '回到首頁' : this.gameMode === 'daily' ? '回到首頁' : '回到首頁',
                     levelData
                 });
             });
         }, 500);
     }
 
-    handleGameOver() {
+    handleGameOver(reason = 'mana') {
+        this.clearCombatTimer();
         this.gameState.gameOver = true;
         this.gameState.solved = true;
-        if(window.audio) window.audio.playError();
+        if (this.gameMode === 'endless') {
+            this.data.stats.endlessBestScore = Math.max(this.data.stats.endlessBestScore, this.gameState.score || 0);
+            this.data.stats.endlessBestDefeated = Math.max(this.data.stats.endlessBestDefeated, this.gameState.defeated || 0);
+            this.saveData({ showToast: false });
+        }
+        if (window.audio) window.audio.playError();
         this.particles.createExplosion(window.innerWidth / 2, window.innerHeight * 0.5, 20, { variant: 'mist', colors: ['#ffd6e0', '#d9d9d9', '#bde0fe'], distance: [20, 70], minSize: 10, maxSize: 18, duration: 1500 });
         this.updateGameUI();
 
@@ -2857,30 +3698,45 @@ class MagicAlchemyLab {
                         text: '這回合消耗太快了。我先把剛才的錯位記下來，再重新整理節奏。'
                     }
                 ]
-                : levelData ? this.buildFailureDialogue(levelData) : [
-                    {
-                        speaker: this.getCharacterProfile('iris').name,
-                        portrait: this.getCharacterProfile('iris').portraitClass,
-                        text: '不行了...精神力已經見底了。'
-                    },
-                    {
-                        speaker: this.getCharacterProfile('mentor').name,
-                        portrait: this.getCharacterProfile('mentor').portraitClass,
-                        text: '今天的實習先到這裡，先回據點把節奏整理乾淨。'
-                    }
-                ];
+                : this.gameMode === 'endless'
+                    ? [
+                        {
+                            speaker: this.getCharacterProfile('scout').name,
+                            portrait: this.getCharacterProfile('scout').portraitClass,
+                            text: reason === 'hp' ? 'HP 已經見底，討伐紀錄到此封存。' : '精神力耗盡，咒語盤無法再維持。'
+                        },
+                        {
+                            speaker: this.getCharacterProfile('iris').name,
+                            portrait: this.getCharacterProfile('iris').portraitClass,
+                            text: `本場擊敗 ${this.gameState.defeated || 0} 名敵人，累積 ${this.gameState.score || 0} 分。下次可以靠稱號把節奏撐得更久。`
+                        }
+                    ]
+                    : levelData ? this.buildFailureDialogue(levelData) : [
+                        {
+                            speaker: this.getCharacterProfile('iris').name,
+                            portrait: this.getCharacterProfile('iris').portraitClass,
+                            text: '不行了...精神力已經見底了。'
+                        },
+                        {
+                            speaker: this.getCharacterProfile('mentor').name,
+                            portrait: this.getCharacterProfile('mentor').portraitClass,
+                            text: '今天的實習先到這裡，先回據點把節奏整理乾淨。'
+                        }
+                    ];
             this.dialogue.play(lines, () => {
                 this.showResultModal({
                     success: false,
-                    title: '精神力透支',
+                    title: this.gameMode === 'endless' && reason === 'hp' ? 'HP 歸零' : '精神力透支',
                     desc: this.gameMode === 'story'
                         ? '本次委託未能完成，公會已記錄失敗報告。'
                         : this.gameMode === 'daily'
                             ? '今日挑戰未能完成，但可以立刻再次嘗試。'
-                        : `無限挑戰結算：共完成 ${this.gameState.orderCount-1} 輪。`,
+                            : `無盡討伐結算：擊敗 ${this.gameState.defeated || 0} 名敵人，累積 ${this.gameState.score || 0} 分。`,
                     story: levelData
                         ? `${this.gameMode === 'daily' ? '每日題目回顧' : '失敗回顧'}｜${levelData.request}`
-                        : '本輪演算紀錄已封存，建議回據點整理節奏。',
+                        : this.gameMode === 'endless'
+                            ? `最佳紀錄：${this.data.stats.endlessBestScore} 分｜${this.data.stats.endlessBestDefeated} 名敵人`
+                            : '本輪演算紀錄已封存，建議回據點整理節奏。',
                     stars: 0,
                     reward: 0,
                     actionText: this.gameMode === 'daily' ? '回到據點' : this.gameMode === 'endless' ? '回到據點' : '回據點休息',
@@ -2892,8 +3748,9 @@ class MagicAlchemyLab {
     }
 
     updateGameUI() {
-        const pct = (this.gameState.mana / this.data.maxMana) * 100;
-        this.els.manaVal.textContent = `${this.gameState.mana} / ${this.data.maxMana}`;
+        const maxMana = this.gameState.maxMana || this.getModeMaxMana(this.gameMode);
+        const pct = (this.gameState.mana / maxMana) * 100;
+        this.els.manaVal.textContent = `${this.gameState.mana} / ${maxMana}`;
         this.els.manaFill.style.width = `${pct}%`;
         if (pct <= 20) this.els.manaFill.classList.add('danger-fill');
         else this.els.manaFill.classList.remove('danger-fill');
@@ -2911,7 +3768,7 @@ class MagicAlchemyLab {
                 filledCount++;
                 slot.className = 'slot filled';
                 if (this.gameState.hints.includes(i)) slot.classList.add('hinted');
-                const sym = this.symbols.find(s=>s.id===symId);
+                const sym = this.symbols.find(s => s.id === symId);
                 const tk = document.createElement('div');
                 tk.className = 'token';
                 tk.style.backgroundImage = `url('${sym.img}')`;
@@ -2925,28 +3782,31 @@ class MagicAlchemyLab {
             }
         });
 
-        const ok = filledCount===this.gameState.slotCount && !this.gameState.solved && !this.gameState.gameOver;
+        const ok = filledCount === this.gameState.slotCount && !this.gameState.solved && !this.gameState.gameOver;
         this.els.btnSubmit.disabled = !ok;
-        
+
         const isLocked = this.currentLevel >= 26 && this.gameMode === 'story';
         let hintCost = this.getHintCost();
         this.els.btnHint.textContent = isLocked ? '封鎖權限' : `查閱文獻 (-${hintCost})`;
         this.els.btnHint.className = isLocked ? 'btn btn-secondary locked-hint' : 'btn btn-secondary';
         this.els.btnHint.disabled = this.gameState.solved || this.gameState.gameOver || this.gameState.mana < hintCost || this.gameState.hints.length === this.gameState.slotCount || isLocked;
+        const submitCost = this.getSubmitCost();
+        this.els.btnSubmit.textContent = this.gameMode === 'endless' ? `施放咒語 (-${submitCost})` : `啟動提煉 (-${submitCost})`;
+        this.updateCombatStage();
     }
 
     addHistoryRow(guess, res) {
-        if(this.gameState.turn===1) this.els.history.innerHTML = '';
-        
+        if (this.gameState.turn === 1) this.els.history.innerHTML = '';
+
         const row = document.createElement('div');
         row.className = 'history-row';
         row.innerHTML = `
             <div class="turn-number">#${this.gameState.turn}</div>
             <div class="history-symbols">
                 ${guess.map(id => {
-                    const s = this.symbols.find(x=>x.id===id);
-                    return `<div class="mini-symbol" style="background-image:url('${s.img}')"></div>`;
-                }).join('')}
+            const s = this.symbols.find(x => x.id === id);
+            return `<div class="mini-symbol" style="background-image:url('${s.img}')"></div>`;
+        }).join('')}
             </div>
             <div class="history-feedback">
                 <div class="feedback-item">
@@ -2974,11 +3834,11 @@ class MagicAlchemyLab {
         });
     }
 
-    showMessage(text, type='info') {
+    showMessage(text, type = 'info') {
         this.els.msg.textContent = text;
         this.els.msg.className = `show ${type}`;
-        if(this.msgTimer) clearTimeout(this.msgTimer);
-        this.msgTimer = setTimeout(()=>this.els.msg.classList.remove('show'), 2000);
+        if (this.msgTimer) clearTimeout(this.msgTimer);
+        this.msgTimer = setTimeout(() => this.els.msg.classList.remove('show'), 2000);
     }
 }
 

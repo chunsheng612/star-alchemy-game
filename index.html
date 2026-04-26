@@ -10,10 +10,10 @@
     <meta name="theme-color" content="#fce8db">
     <meta name="description" content="在魔法工坊中完成委託、提煉配方並升格的煉金解謎遊戲。">
     <title>星辰煉金學苑：邊境實習</title>
-    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="manifest" href="manifest.webmanifest?v=20260426-dailyfix2">
     <link rel="apple-touch-icon" href="assets/pwa/apple-touch-icon.png">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=20260426-dailyfix2">
 </head>
 <body>
     <div id="particles-container"></div>
@@ -68,7 +68,7 @@
 
         <!-- 通用頂部列 (Map & Shop) -->
         <div id="global-header" class="hidden">
-            <button id="btn-global-back" class="icon-btn">◀ 返回大廳</button>
+            <button id="btn-global-back" class="icon-btn">回到首頁</button>
             <div class="header-title" id="header-title">邊境據點</div>
             <div class="stats-combo">
                 <div class="stamina-display"><img src="assets/icons/potion_red.png" alt="E" style="width:18px"><span id="global-stamina">100</span></div>
@@ -82,6 +82,7 @@
         <!-- ================= VIEW: 首頁 (HUB) ================= -->
         <section id="view-hub" class="view-section active-view">
             <div class="hub-content hub-hero-layout">
+                <button id="btn-hub-home" class="hub-home-return hidden">回到首頁</button>
                 <div class="home-shell hub-top-card">
                     <div class="home-brand">
                         <span class="home-kicker">STAR ALCHEMY</span>
@@ -117,7 +118,7 @@
                     <div class="hero-bubble" id="hero-bubble">
                         <span class="bubble-kicker">目前的目標</span>
                         <p id="hub-task-text">新的委託正在等待處理。</p>
-                        <small id="hero-guide-meta" class="hero-guide-meta">故事直接進選關，每日與無限挑戰都不會消耗體力。</small>
+                        <small id="hero-guide-meta" class="hero-guide-meta">故事直接進選關，每日消耗 5 體力，無盡討伐消耗 30 體力。</small>
                     </div>
                     <div class="hero-portrait-wrap" id="btn-hero-interact">
                         <img id="hub-hero-image" src="assets/char_alchemist.png" alt="艾莉絲" class="hero-img">
@@ -125,29 +126,39 @@
                 </div>
 
                 <div class="hub-panel-stack">
-                    <section class="hub-panel active" data-panel="story">
+                    <section class="hub-panel hub-home-panel active" data-panel="home">
                         <div class="hub-panel-head">
                             <div>
-                                <span class="hub-panel-kicker">故事主線</span>
-                                <h2 id="story-next-title">晨露校準</h2>
-                                <p id="story-next-desc">下一張委託已經送到桌上，準備處理主線任務。</p>
+                                <span class="hub-panel-kicker">首頁</span>
+                                <h2 id="story-next-title">主線委託</h2>
+                                <p id="story-next-desc">艾莉絲正在整理下一段邊境紀錄。</p>
                             </div>
-                            <span class="hub-panel-badge" id="story-progress-badge">第 1 關</span>
+                            <span class="hub-panel-badge" id="story-progress-badge">主線進行中</span>
                         </div>
+                        <div class="home-story-summary">
+                            <span class="feed-kicker">主線故事</span>
+                            <h3 id="story-progress-text">邊境實習紀錄</h3>
+                            <p id="home-story-copy">據點的大釜已經預熱完成，下一份委託正在等待你確認規格。</p>
+                        </div>
+                    </section>
 
-                        <button id="btn-story-start" class="hub-large-action">
-                            <div class="action-info">
-                                <span>前往故事選關</span>
-                                <small id="story-progress-text">第 1 關：晨露校準</small>
+                    <section class="hub-panel" data-panel="missions">
+                        <div class="hub-panel-head">
+                            <div>
+                                <span class="hub-panel-kicker">任務選關</span>
+                                <h2>委託清單</h2>
+                                <p>選擇已解鎖的主線委託，重玩關卡或推進下一段故事。</p>
                             </div>
-                            <img src="assets/icons/nav_story.png" alt="故事">
-                        </button>
+                        </div>
+                        <div class="level-grid" id="level-grid">
+                            <!-- 動態產生關卡按鈕 -->
+                        </div>
                     </section>
 
                     <section class="hub-panel" data-panel="daily">
                         <div class="hub-panel-head">
                             <div>
-                                <span class="hub-panel-kicker">每日輪替</span>
+                                <span class="hub-panel-kicker">每日與無盡</span>
                                 <h2 id="daily-title">今日挑戰</h2>
                                 <p id="daily-desc">每日星圖正在重新校準中。</p>
                             </div>
@@ -157,14 +168,14 @@
                         <button id="btn-daily-start" class="hub-large-action daily-action">
                             <div class="action-info">
                                 <span>啟動每日挑戰</span>
-                                <small id="daily-status-text">今日首通可得 500 星幣</small>
+                                <small id="daily-status-text">每次消耗 5 體力，過關獲得 10 金幣</small>
                             </div>
                             <img src="assets/icons/nav_daily.png" alt="每日">
                         </button>
 
                         <div class="daily-meta">
                             <span id="daily-rule-label">規格待定</span>
-                            <strong id="daily-reward-status">今日首通可得 500 星幣</strong>
+                            <strong id="daily-reward-status">每次過關 10 金幣</strong>
                         </div>
 
                         <div class="weekly-card">
@@ -181,19 +192,19 @@
 
                         <button id="btn-endless-start" class="hub-large-action endless-action">
                             <div class="action-info">
-                                <span>啟動無限挑戰</span>
-                                <small>不限次數、不耗體力，每次完成可得 10 星幣。</small>
+                                <span>啟動無盡討伐</span>
+                                <small>每場消耗 30 體力，用咒語解謎擊敗敵人並累積得分。</small>
                             </div>
-                            <img src="assets/icons/swirl.png" alt="無限挑戰">
+                            <img src="assets/icons/swirl.png" alt="無盡討伐">
                         </button>
                     </section>
 
                     <section class="hub-panel" data-panel="inventory">
                         <div class="hub-panel-head">
                             <div>
-                                <span class="hub-panel-kicker">實習裝備</span>
-                                <h2>我的道具</h2>
-                                <p>目前已啟用的工坊強化與狀態總覽。</p>
+                                <span class="hub-panel-kicker">人物與背包</span>
+                                <h2>人物</h2>
+                                <p>選擇自己的煉金術師、查看背包強化，並配置已解鎖的稱號能力。</p>
                             </div>
                         </div>
                         <div class="inventory-grid" id="inventory-grid"></div>
@@ -213,6 +224,12 @@
                                 <span class="feed-kicker">系統狀態</span>
                                 <h3>裝置與雲端</h3>
                                 <p>Google 登入與雲端存檔可跨裝置延續進度，安裝到主畫面後體驗會更接近手機遊戲。</p>
+                                <button id="btn-settings-login-google" class="btn btn-secondary" style="margin-top: 10px;">
+                                    <span style="display:flex; align-items:center; justify-content:center; gap:8px;">
+                                        <svg style="width:18px;height:18px;" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                                        登入 Google 帳號
+                                    </span>
+                                </button>
                             </div>
                             <div class="feed-card">
                                 <span class="feed-kicker">存檔同步</span>
@@ -228,6 +245,19 @@
                                 <button id="btn-install-game" class="hub-tip-btn hidden">安裝遊戲</button>
                                 <span id="install-ios-tip" class="install-note hidden">iPhone 請用 Safari 點分享，再選「加入主畫面」。</span>
                             </div>
+                            <button id="btn-delete-data" class="menu-btn settings-btn btn-danger" title="刪除所有資料" style="margin-top: 20px;">☠ 刪除資料並重新開始</button>
+                        </div>
+                    </section>
+
+                    <section class="hub-panel" data-panel="shop">
+                        <div class="shop-container">
+                            <div class="shop-npc">
+                                <img src="assets/char_broker.png" alt="Shopkeeper" class="npc-avatar broker-avatar">
+                                <div class="npc-dialogue">您好，實習生。這裡能補體力、升級大釜，也能買到稀有的被動強化。</div>
+                            </div>
+                            <div class="shop-items" id="shop-items">
+                                <!-- 動態產生商品 -->
+                            </div>
                         </div>
                     </section>
                 </div>
@@ -238,59 +268,32 @@
                         <button id="btn-hub-tip-shop" class="hub-tip-btn">前往商店補給</button>
                     </div>
                 </div>
-
-                <nav class="hub-bottom-nav styled-nav" id="hub-bottom-nav">
-                    <button class="hub-nav-btn" data-hub-target="shop">
-                        <img src="assets/icons/nav_shop.png" alt="商店">
-                        <span>商店</span>
-                    </button>
-                    <button class="hub-nav-btn" data-hub-target="inventory">
-                        <img src="assets/icons/nav_inventory.png" alt="道具">
-                        <span>道具</span>
-                    </button>
-                    <button class="hub-nav-btn main-orb-btn active" data-hub-target="story">
-                        <img src="assets/icons/nav_story.png" alt="故事">
-                        <span>故事</span>
-                    </button>
-                    <button class="hub-nav-btn" data-hub-target="daily">
-                        <img src="assets/icons/nav_daily.png" alt="每日">
-                        <span>每日</span>
-                    </button>
-                    <button class="hub-nav-btn" data-hub-target="settings">
-                        <img src="assets/icons/nav_settings.png" alt="設定">
-                        <span>設定</span>
-                    </button>
-                </nav>
             </div>
+
+            <nav class="hub-bottom-nav styled-nav" id="hub-bottom-nav">
+                <button class="hub-nav-btn" data-hub-target="shop">
+                    <img src="assets/icons/nav_shop.png" alt="商店">
+                    <span>商店</span>
+                </button>
+                <button class="hub-nav-btn" data-hub-target="inventory">
+                    <img src="assets/icons/nav_inventory.png" alt="人物">
+                    <span>人物</span>
+                </button>
+                <button class="hub-nav-btn main-orb-btn" data-hub-target="missions">
+                    <img src="assets/icons/nav_story.png" alt="任務">
+                    <span>任務</span>
+                </button>
+                <button class="hub-nav-btn" data-hub-target="daily">
+                    <img src="assets/icons/nav_daily.png" alt="每日">
+                    <span>每日</span>
+                </button>
+                <button class="hub-nav-btn" data-hub-target="settings">
+                    <img src="assets/icons/nav_settings.png" alt="設定">
+                    <span>設定</span>
+                </button>
+            </nav>
         </section>
 
-        <!-- ================= VIEW: 關卡選擇 (MAP) ================= -->
-        <section id="view-map" class="view-section">
-            <div class="map-container">
-                <div class="map-tools">
-                    <button id="btn-map-shop" class="map-mini-btn">商店補給</button>
-                    <button id="btn-map-daily" class="map-mini-btn map-mini-btn-secondary">每日挑戰</button>
-                </div>
-                <span id="cloud-save-status" class="cloud-save-status map-cloud-status">未登入時僅保存在此裝置。</span>
-                <h2 class="section-heading">選擇待處理的委託單</h2>
-                <div class="level-grid" id="level-grid">
-                    <!-- 動態產生關卡按鈕 (未解鎖的不顯示) -->
-                </div>
-            </div>
-        </section>
-
-        <!-- ================= VIEW: 魔法商店 (SHOP) ================= -->
-        <section id="view-shop" class="view-section">
-            <div class="shop-container">
-                <div class="shop-npc">
-                    <img src="assets/char_broker.png" alt="Shopkeeper" class="npc-avatar broker-avatar">
-                    <div class="npc-dialogue">您好，實習生。這裡能補體力、升級大釜，也能買到稀有的被動強化。</div>
-                </div>
-                <div class="shop-items" id="shop-items">
-                    <!-- 動態產生商品 -->
-                </div>
-            </div>
-        </section>
 
         <!-- ================= VIEW: 遊戲本體 (GAME) ================= -->
         <section id="view-game" class="view-section">
@@ -312,6 +315,52 @@
                     </div>
                 </div>
             </header>
+
+            <div class="feedback-legend" id="feedback-legend">
+                <span class="legend-title">我的預測</span>
+                <span><img src="assets/icons/star.png" alt="">符號正確位置正確</span>
+                <span><img src="assets/icons/swirl.png" alt="">符號正確位置錯誤</span>
+            </div>
+
+            <div class="combat-stage" id="combat-stage">
+                <div class="combat-actor combat-player">
+                    <div class="combat-portrait-frame">
+                        <img id="game-player-image" src="assets/chars/female_stage1.png" alt="玩家角色">
+                    </div>
+                    <div class="combat-actor-meta">
+                        <strong id="game-player-name">煉金術師</strong>
+                        <span id="game-player-title">見習煉金師</span>
+                    </div>
+                </div>
+
+                <div class="combat-center">
+                    <div class="combat-mode-tag" id="combat-mode-tag">故事委託</div>
+                    <div class="combat-timer hidden" id="combat-timer">
+                        <div class="combat-timer-label" style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+                            <span>攻擊倒數</span>
+                            <strong id="combat-timer-value">20</strong>
+                        </div>
+                        <div class="combat-timer-bar"><div id="combat-timer-fill"></div></div>
+                    </div>
+                    <div class="combat-hp hidden" id="combat-hp">
+                        <div class="combat-hp-label">
+                            <span>HP</span>
+                            <strong id="combat-hp-value">3 / 3</strong>
+                        </div>
+                        <div class="combat-hp-bar"><div id="combat-hp-fill"></div></div>
+                    </div>
+                </div>
+
+                <div class="combat-actor combat-enemy hidden" id="combat-enemy">
+                    <div class="combat-portrait-frame enemy-frame">
+                        <img id="combat-enemy-image" src="assets/enemies/starry_slime.png" alt="敵人">
+                    </div>
+                    <div class="combat-actor-meta">
+                        <strong id="combat-enemy-name">星露史萊姆</strong>
+                        <span id="combat-enemy-count">第 1 隻</span>
+                    </div>
+                </div>
+            </div>
 
             <!-- 歷史紀錄展示區 -->
             <div id="history-display">
@@ -340,7 +389,7 @@
             </div>
 
             <!-- Modal (結局/結算) -->
-            <div class="modal-overlay" id="result-modal">
+            <div class="modal-overlay" id="result-modal" aria-hidden="true" inert hidden>
                 <div class="modal-panel result-panel" id="result-panel" data-result="success">
                     <div class="modal-topline" id="modal-topline">委託評級</div>
                     <h2 id="modal-title">提煉完成</h2>
@@ -370,29 +419,50 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- 自訂確認視窗 (Confirm Modal) -->
-            <div id="confirm-modal" class="modal-overlay">
-                <div class="modal-panel">
-                    <h2 id="confirm-title" class="error-title">確認</h2>
-                    <p id="confirm-desc">您確定要執行此操作？</p>
-                    <div class="action-container" style="justify-content: center;">
-                        <button id="btn-confirm-cancel" class="btn btn-secondary">取消</button>
-                        <button id="btn-confirm-ok" class="btn btn-primary" style="background:var(--color-error); border-color:var(--color-error);">確定</button>
-                    </div>
-                </div>
-            </div>
-            
             <div id="game-message"></div>
         </section>
 
+        <!-- 稱號選擇視窗 -->
+        <div id="title-modal" class="modal-overlay" aria-hidden="true" inert hidden>
+            <div class="modal-panel" style="max-height: 80vh; overflow-y: auto;">
+                <h2 class="error-title" style="color: var(--color-primary);">稱號管理</h2>
+                <div id="title-modal-desc"></div>
+                <div class="action-container" style="justify-content: center; margin-top: 20px;">
+                    <button id="btn-title-close" class="btn btn-secondary">關閉</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 角色選擇視窗 -->
+        <div id="character-modal" class="modal-overlay" aria-hidden="true" inert hidden>
+            <div class="modal-panel" style="max-height: 80vh; overflow-y: auto;">
+                <h2 class="error-title" style="color: var(--color-primary);">選擇角色</h2>
+                <div id="character-modal-desc"></div>
+                <div class="action-container" style="justify-content: center; margin-top: 20px;">
+                    <button id="btn-character-close" class="btn btn-secondary">關閉</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 自訂確認視窗 (Confirm Modal) -->
+        <div id="confirm-modal" class="modal-overlay" aria-hidden="true" inert hidden>
+            <div class="modal-panel">
+                <h2 id="confirm-title" class="error-title">確認</h2>
+                <div id="confirm-desc" style="margin-bottom: 20px; color: var(--color-text-main);">您確定要執行此操作？</div>
+                <div class="action-container" style="justify-content: center;">
+                    <button id="btn-confirm-cancel" class="btn btn-secondary">取消</button>
+                    <button id="btn-confirm-ok" class="btn btn-primary" style="background:var(--color-error); border-color:var(--color-error);">確定</button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    <script src="js/audio.js"></script>
-    <script src="js/app.js"></script>
-    <script src="js/pwa.js"></script>
-    <script src="js/firebase-config.js"></script>
-    <script type="module" src="js/firebase-auth.js"></script>
-    <script type="module" src="js/firebase-save.js"></script>
+    <script src="js/audio.js?v=20260426-dailyfix2"></script>
+    <script src="js/app.js?v=20260426-dailyfix2"></script>
+    <script src="js/pwa.js?v=20260426-dailyfix2"></script>
+    <script src="js/firebase-config.js?v=20260426-dailyfix2"></script>
+    <script type="module" src="js/firebase-auth.js?v=20260426-dailyfix2"></script>
+    <script type="module" src="js/firebase-save.js?v=20260426-dailyfix2"></script>
 </body>
 </html>

@@ -1,15 +1,16 @@
-const CACHE_NAME = "staralchemy-shell-v2";
+const CACHE_NAME = "staralchemy-shell-v8";
+const ASSET_VERSION = "20260426-dailyfix2";
 const CORE_ASSETS = [
     "./",
     "./index.html",
-    "./manifest.webmanifest",
-    "./css/style.css",
-    "./js/app.js",
-    "./js/audio.js",
-    "./js/pwa.js",
-    "./js/firebase-config.js",
-    "./js/firebase-auth.js",
-    "./js/firebase-save.js",
+    `./manifest.webmanifest?v=${ASSET_VERSION}`,
+    `./css/style.css?v=${ASSET_VERSION}`,
+    `./js/app.js?v=${ASSET_VERSION}`,
+    `./js/audio.js?v=${ASSET_VERSION}`,
+    `./js/pwa.js?v=${ASSET_VERSION}`,
+    `./js/firebase-config.js?v=${ASSET_VERSION}`,
+    `./js/firebase-auth.js?v=${ASSET_VERSION}`,
+    `./js/firebase-save.js?v=${ASSET_VERSION}`,
     "./assets/bg_magic_lab.png",
     "./assets/char_alchemist.png",
     "./assets/icons/coin.png",
@@ -54,7 +55,7 @@ self.addEventListener("fetch", (event) => {
 
     if (isDocument) {
         event.respondWith(
-            fetch(request)
+            fetch(request, { cache: "reload" })
                 .then((response) => {
                     const copy = response.clone();
                     caches.open(CACHE_NAME).then((cache) => cache.put("./index.html", copy));
@@ -67,7 +68,7 @@ self.addEventListener("fetch", (event) => {
 
     if (isVersionSensitiveAsset) {
         event.respondWith(
-            fetch(request)
+            fetch(request, { cache: "reload" })
                 .then((response) => {
                     if (!response || response.status !== 200) return response;
                     const copy = response.clone();

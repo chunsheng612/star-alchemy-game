@@ -14,7 +14,7 @@
     <link rel="icon" type="image/png" sizes="192x192" href="assets/pwa/icon-192.png?v=20260427-layoutfix4">
     <link rel="apple-touch-icon" href="assets/pwa/apple-touch-icon.png">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=20260427-layoutfix4">
+    <link rel="stylesheet" href="css/style.css?v=20260427-layoutfix5">
 </head>
 <body>
     <div id="particles-container"></div>
@@ -332,6 +332,13 @@
                         <strong id="game-player-name">煉金術師</strong>
                         <span id="game-player-title">見習煉金師</span>
                     </div>
+                    <div class="combat-hp hidden" id="combat-hp">
+                        <div class="combat-hp-label">
+                            <span>HP</span>
+                            <strong id="combat-hp-value">3 / 3</strong>
+                        </div>
+                        <div class="combat-hp-bar"><div id="combat-hp-fill"></div></div>
+                    </div>
                 </div>
 
                 <div class="combat-center">
@@ -342,13 +349,6 @@
                             <strong id="combat-timer-value">20</strong>
                         </div>
                         <div class="combat-timer-bar"><div id="combat-timer-fill"></div></div>
-                    </div>
-                    <div class="combat-hp hidden" id="combat-hp">
-                        <div class="combat-hp-label">
-                            <span>HP</span>
-                            <strong id="combat-hp-value">3 / 3</strong>
-                        </div>
-                        <div class="combat-hp-bar"><div id="combat-hp-fill"></div></div>
                     </div>
                 </div>
 

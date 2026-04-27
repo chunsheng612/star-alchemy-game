@@ -2012,9 +2012,9 @@ img.portrait-client {
 }
 #view-game.endless-battle .combat-stage {
     position: relative;
-    flex: 0 0 clamp(238px, 34dvh, 330px);
-    min-height: clamp(238px, 34dvh, 330px);
-    max-height: 330px;
+    flex: 0 0 clamp(190px, 28dvh, 260px);
+    min-height: clamp(190px, 28dvh, 260px);
+    max-height: 260px;
     display: block;
     align-items: stretch;
     padding: 0 var(--content-side-padding) 12px;
@@ -2065,17 +2065,19 @@ img.portrait-client {
     display: none;
 }
 #view-game.endless-battle .combat-hp {
-    position: absolute;
-    top: 0;
+    position: relative;
+    top: auto;
     left: auto;
-    right: 4px;
-    width: auto;
-    min-width: 120px;
+    right: auto;
+    width: 100%;
+    min-width: 0;
     gap: 6px;
-    padding: 8px 12px;
-    border-radius: 18px;
-    background: rgba(255, 252, 248, 0.9);
-    box-shadow: 0 8px 20px rgba(43, 30, 42, 0.14);
+    margin-top: 2px;
+    padding: 6px 8px 8px;
+    border-radius: 0 0 18px 18px;
+    background: transparent;
+    box-shadow: none;
+    border-top: 1px solid rgba(0,0,0,0.06);
     z-index: 12;
 }
 #view-game.endless-battle .combat-hp-bar {
@@ -2083,19 +2085,23 @@ img.portrait-client {
 }
 #view-game.endless-battle .combat-timer {
     position: absolute;
-    left: 50%;
-    right: auto;
-    top: auto;
-    bottom: 5px;
-    width: min(80%, 280px);
-    transform: translateX(-50%);
+    top: 38px;
+    right: 4px;
+    left: auto;
+    bottom: auto;
+    width: auto;
+    min-width: 120px;
+    transform: none;
     gap: 6px;
-    padding: 8px 12px;
-    border-radius: 18px;
-    background: rgba(255, 252, 248, 0.9);
-    box-shadow: 0 8px 20px rgba(43, 30, 42, 0.16);
+    padding: 4px 12px 10px 12px;
+    border-radius: 0 0 18px 18px;
+    background: rgba(255, 252, 248, 0.95);
+    box-shadow: 0 8px 18px rgba(43, 30, 42, 0.16);
+    border: var(--glass-border);
+    border-top: 1px solid rgba(0,0,0,0.05);
     display: flex;
     flex-direction: column;
+    z-index: 12;
 }
 #view-game.endless-battle .combat-timer-label {
     font-size: 12px;
@@ -2114,6 +2120,7 @@ img.portrait-client {
     border-radius: 18px;
     background: rgba(255,255,255,0.84);
     overflow: visible;
+    box-shadow: 0 8px 18px rgba(43, 30, 42, 0.12);
 }
 #view-game.endless-battle .combat-player .combat-portrait-frame {
     height: 74px;
@@ -2147,15 +2154,23 @@ img.portrait-client {
     max-height: clamp(104px, 16dvh, 142px);
     filter: drop-shadow(0 18px 22px rgba(28, 20, 38, 0.35));
     animation: enemyBreathing 3s ease-in-out infinite;
+    transform: scale(0.8);
+    transform-origin: bottom center;
 }
 #view-game.endless-battle .combat-enemy .combat-actor-meta {
-    width: min(100%, 200px);
-    margin: 4px auto 0;
-    padding: 4px 8px;
-    border-radius: 999px;
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: auto;
+    min-width: 120px;
+    margin: 0;
+    padding: 6px 12px;
+    border-radius: 18px 18px 0 0;
     background: rgba(255, 252, 248, 0.95);
     box-shadow: 0 8px 18px rgba(43, 30, 42, 0.16);
     border: var(--glass-border);
+    border-bottom: none;
+    z-index: 12;
 }
 #view-game.endless-battle .combat-enemy .combat-actor-meta strong {
     font-size: 11px;

@@ -387,7 +387,15 @@ class MagicAlchemyLab {
             combatEnemy: document.getElementById('combat-enemy'),
             combatEnemyImage: document.getElementById('combat-enemy-image'),
             combatEnemyName: document.getElementById('combat-enemy-name'),
-            combatEnemyCount: document.getElementById('combat-enemy-count')
+            combatEnemyCount: document.getElementById('combat-enemy-count'),
+            petInventoryGrid: document.getElementById('pet-inventory-grid'),
+            btnGachaDraw: document.getElementById('btn-gacha-draw'),
+            gachaOverlay: document.getElementById('gacha-overlay'),
+            gachaResultImg: document.getElementById('gacha-result-img'),
+            gachaResultName: document.getElementById('gacha-result-name'),
+            btnGachaClose: document.getElementById('btn-gacha-close'),
+            hubPetCompanion: document.getElementById('hub-pet-companion'),
+            gamePetCompanion: document.getElementById('game-pet-companion')
         };
 
         // Greeting quotes for each character (used in boot greeting)
@@ -758,6 +766,31 @@ class MagicAlchemyLab {
         };
     }
 
+    getPetCatalog() {
+        return [
+            { id: 'p1', name: '星光貓頭鷹', image: 'assets/pets/pet_starry_owl.png' },
+            { id: 'p2', name: '懸浮魔法書', image: 'assets/pets/pet_floating_book.png' },
+            { id: 'p3', name: '寶石小飛龍', image: 'assets/pets/pet_tiny_dragon.png' },
+            { id: 'p4', name: '月光貓', image: 'assets/pets/1.png' },
+            { id: 'p5', name: '太陽鳳凰', image: 'assets/pets/2.png' },
+            { id: 'p6', name: '雲朵水母', image: 'assets/pets/3.png' },
+            { id: 'p7', name: '水晶蜘蛛', image: 'assets/pets/4.png' },
+            { id: 'm1', name: '星露史萊姆', image: 'assets/enemies/starry_slime.png' },
+            { id: 'm2', name: '霧嵐水母', image: 'assets/enemies/mist_jellyfish.png' },
+            { id: 'm3', name: '葉翼龍', image: 'assets/enemies/leafy_dragon.png' },
+            { id: 'm4', name: '晶甲龜', image: 'assets/enemies/crystal_turtle.png' },
+            { id: 'm5', name: '燼火狐', image: 'assets/enemies/cinder_fox.png' },
+            { id: 'm6', name: '雲綿獸', image: 'assets/enemies/cloud_sheep.png' },
+            { id: 'm7', name: '耀陽精靈', image: 'assets/enemies/solar_sprite.png' },
+            { id: 'm8', name: '月光梟', image: 'assets/enemies/moonlight_owl.png' },
+            { id: 'm9', name: '影貓', image: 'assets/enemies/shadow_cat.png' },
+            { id: 'm10', name: '發條鳥', image: 'assets/enemies/clockwork_bird.png' },
+            { id: 'v1', name: '黃金史萊姆', image: 'assets/enemies/starry_slime.png', filter: 'brightness(1.2) sepia(1) saturate(10) hue-rotate(-10deg)' },
+            { id: 'v2', name: '虛空狐', image: 'assets/enemies/cinder_fox.png', filter: 'hue-rotate(180deg) brightness(0.8)' },
+            { id: 'v3', name: '紅寶石龜', image: 'assets/enemies/crystal_turtle.png', filter: 'hue-rotate(-45deg) saturate(2)' }
+        ];
+    }
+
     getPlayableCharacters() {
         return [
             {
@@ -768,7 +801,8 @@ class MagicAlchemyLab {
                 stages: [
                     { label: '學徒袍', unlockLevel: 1, image: 'assets/chars/female_stage1.png' },
                     { label: '街區調律裝', unlockLevel: 11, image: 'assets/chars/female_stage2.png' },
-                    { label: '邊境星冠裝', unlockLevel: 21, image: 'assets/chars/female_stage3.png' }
+                    { label: '邊境星冠裝', unlockLevel: 21, image: 'assets/chars/female_stage3.png' },
+                    { label: '傳奇賢者裝', unlockLevel: 31, image: 'assets/chars/female_stage4.png' }
                 ]
             },
             {
@@ -779,7 +813,8 @@ class MagicAlchemyLab {
                 stages: [
                     { label: '學徒袍', unlockLevel: 1, image: 'assets/chars/male_stage1.png' },
                     { label: '街區調律裝', unlockLevel: 11, image: 'assets/chars/male_stage2.png' },
-                    { label: '邊境星冠裝', unlockLevel: 21, image: 'assets/chars/male_stage3.png' }
+                    { label: '邊境星冠裝', unlockLevel: 21, image: 'assets/chars/male_stage3.png' },
+                    { label: '傳奇賢者裝', unlockLevel: 31, image: 'assets/chars/male_stage4.png' }
                 ]
             }
         ];
@@ -846,6 +881,7 @@ class MagicAlchemyLab {
     }
 
     getPlayerStageIndex() {
+        if ((this.data?.highestLevel || 1) >= 31) return 3;
         if ((this.data?.highestLevel || 1) >= 21) return 2;
         if ((this.data?.highestLevel || 1) >= 11) return 1;
         return 0;
@@ -1187,7 +1223,7 @@ class MagicAlchemyLab {
             stats: { wins: 0, manaSpent: 0, stars: 0, endlessPlayed: 0, coinsSpent: 0, dailyWins: 0, endlessBestScore: 0, endlessBestDefeated: 0 },
             daily: { rewardDate: '', bestDate: '', bestTurns: 0, lastPlayedDate: '', playCount: 0 },
             weekly: { cycleStart: '', stamps: [], rewardClaimed: false },
-            player: { selectedCharacter: 'female', unlockedTitles: ['apprentice'], activeTitle: 'apprentice', titleLevels: {} },
+            player: { selectedCharacter: 'female', unlockedTitles: ['apprentice'], activeTitle: 'apprentice', titleLevels: {}, ownedPets: [], activePet: null },
             settings: { bootSeen: false, guestStarted: false }
         };
     }
@@ -1266,7 +1302,9 @@ class MagicAlchemyLab {
             selectedCharacter: playableIds.has(merged.player.selectedCharacter) ? merged.player.selectedCharacter : defaultData.player.selectedCharacter,
             unlockedTitles,
             activeTitle: unlockedTitles.includes(merged.player.activeTitle) ? merged.player.activeTitle : 'apprentice',
-            titleLevels
+            titleLevels,
+            ownedPets: Array.isArray(merged.player.ownedPets) ? merged.player.ownedPets : [],
+            activePet: merged.player.activePet || null
         };
 
         merged.settings = {
@@ -1595,18 +1633,21 @@ class MagicAlchemyLab {
         const pool = this.getEndlessChallengePool(slotCount);
         const chosen = pool[Math.floor(rng() * pool.length)] || { rule: 'repeat-one', ruleLabel: '回火疊加' };
         const enemy = this.getEnemyForOrder(orderCount);
-        const title = slotCount >= 5 ? '五芒咒陣' : slotCount >= 4 ? '四象咒陣' : '三環咒陣';
+        const isBoss = orderCount > 0 && orderCount % 10 === 0;
+        const title = isBoss ? '星隕禁忌陣' : (slotCount >= 5 ? '五芒咒陣' : slotCount >= 4 ? '四象咒陣' : '三環咒陣');
+        
         return this.normalizePuzzleDefinition({
             id: `endless-${orderCount}`,
             title: `${title} #${orderCount}`,
-            name: `無盡討伐 #${orderCount}｜${enemy.name}`,
+            name: isBoss ? `【BOSS】${enemy.name}` : `無盡討伐 #${orderCount}｜${enemy.name}`,
             chapter: '無盡討伐',
             client: enemy.name,
-            request: `在倒數歸零前組出正確咒語，命中後可直接擊敗 ${enemy.name}。`,
+            request: isBoss ? `警告：遭遇強大魔物！請謹慎組合咒語。` : `在倒數歸零前組出正確咒語，命中後可直接擊敗 ${enemy.name}。`,
             rule: chosen.rule,
             ruleLabel: chosen.ruleLabel,
             slotCount,
-            intro: '討伐盤已展開，現在要把配方當成咒語來施放。',
+            isBoss,
+            intro: isBoss ? '空氣中瀰漫著危險的魔力...最強魔物現身！' : '討伐盤已展開，現在要把配方當成咒語來施放。',
             perfect: '咒語一擊命中，敵人還沒反應過來就被封回星砂。',
             good: '咒語完成，戰線保持穩定。',
             rough: '這一擊有些勉強，但敵人已經倒下。',
@@ -1825,7 +1866,10 @@ class MagicAlchemyLab {
         this.renderShop();
         this.renderPalette();
         this.renderHubDashboard();
+        this.renderFamiliarPanel();
+        this.updatePetDisplay();
         this.bindEvents();
+        this.initCheats();
         this.quests.check();
         window.audio?.updateMuteButton?.();
         this.updateScene('hub');
@@ -2034,7 +2078,15 @@ class MagicAlchemyLab {
     getShopItemCost(baseCost, itemId) {
         const level = this.getShopItemLevel(itemId);
         if (level >= 10) return Infinity;
-        return Math.floor(baseCost * Math.pow(2, level));
+        
+        // Before Level 4, use exponential growth (doubling)
+        // After Level 4, add a fixed 2000 coins per level as requested
+        if (level <= 4) {
+            return Math.floor(baseCost * Math.pow(2, level));
+        } else {
+            const costAtLv4 = baseCost * Math.pow(2, 4);
+            return Math.floor(costAtLv4 + (level - 4) * 2000);
+        }
     }
 
     getShopInventory() {
@@ -2486,6 +2538,7 @@ class MagicAlchemyLab {
                 </div>
             </div>
         `;
+        this.renderFamiliarPanel();
     }
 
     openCharacterSelectModal() {
@@ -2818,6 +2871,22 @@ class MagicAlchemyLab {
             }
             this.showLocation('hub');
             this.showHubPanel(target);
+        });
+
+        this.els.btnGachaDraw?.addEventListener('click', () => {
+            this.drawFamiliar();
+        });
+
+        this.els.btnGachaClose?.addEventListener('click', () => {
+            if (window.audio) window.audio.playClick();
+            this.els.gachaOverlay.classList.remove('active', 'reveal');
+        });
+
+        this.els.petInventoryGrid?.addEventListener('click', (e) => {
+            const card = e.target.closest('.pet-card.owned');
+            if (!card) return;
+            if (window.audio) window.audio.playClick();
+            this.setActivePet(card.dataset.id);
         });
 
         this.els.inventoryGrid?.addEventListener('click', (e) => {
@@ -3247,7 +3316,15 @@ class MagicAlchemyLab {
         const isEndless = this.gameMode === 'endless';
         const hasStoryTimer = this.gameMode === 'story' && Number.isFinite(this.gameState.timeLimit) && this.gameState.timeLimit > 0;
         this.els.viewGame?.classList.toggle('endless-battle', isEndless);
-        this.els.combatStage.classList.toggle('is-endless', isEndless);
+        this.els.viewGame?.classList.toggle('abyssal-theme', isEndless);
+        this.els.combatStage?.classList.toggle('is-endless', isEndless);
+        const isBoss = !!this.gameState.currentPuzzle?.isBoss;
+        this.els.combatEnemy?.classList.toggle('is-boss', isBoss);
+        
+        if (isBoss && !this.gameState.gameOver) {
+            this.particles.createCauldronPulse(window.innerWidth / 2, window.innerHeight * 0.45);
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+        }
         this.els.combatModeTag.textContent = isEndless
             ? `無盡討伐｜得分 ${this.gameState.score || 0}`
             : this.gameMode === 'daily'
@@ -3741,7 +3818,9 @@ class MagicAlchemyLab {
         if (!cands.length) return;
 
         this.gameState.hintPenalty = true;
-        this.showMessage('動用查閱文獻：當局評分鎖定為 1 星', 'error');
+        if (this.gameMode !== 'endless') {
+            this.showMessage('動用查閱文獻：當局評分鎖定為 1 星', 'error');
+        }
 
         const h = cands[Math.floor(Math.random() * cands.length)];
         this.gameState.hints.push(h);
@@ -3775,6 +3854,7 @@ class MagicAlchemyLab {
 
         if (res.exact > 0) {
             this.els.combatStage?.querySelector('.combat-player')?.classList.add('success');
+            if (navigator.vibrate) navigator.vibrate(20);
             setTimeout(() => {
                 this.els.combatStage?.querySelector('.combat-player')?.classList.remove('success');
             }, 600);
@@ -3787,10 +3867,14 @@ class MagicAlchemyLab {
             }, 400);
         }
 
-        if (res.exact === this.gameState.slotCount) this.handleSolve();
+        if (res.exact === this.gameState.slotCount) {
+            if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+            this.handleSolve();
+        }
         else {
             if (window.audio) window.audio.playSkill();
-            this.particles.createExplosion(window.innerWidth / 2, window.innerHeight * 0.45, 12, { variant: 'mist', colors: ['#a9def9', '#d0f4de', '#e4c1f9'], distance: [10, 55], minSize: 8, maxSize: 16, duration: 1400 });
+            const explosionColors = this.gameMode === 'endless' ? ['#7b4bff', '#ff5799', '#3d304a'] : ['#a9def9', '#d0f4de', '#e4c1f9'];
+            this.particles.createExplosion(window.innerWidth / 2, window.innerHeight * 0.45, 12, { variant: 'mist', colors: explosionColors, distance: [10, 55], minSize: 8, maxSize: 16, duration: 1400 });
             this.gameState.input = this.gameState.input.map((v, i) => this.gameState.hints.includes(i) ? v : null);
             this.updateGameUI();
             if (this.gameState.mana <= 0) this.handleGameOver();
@@ -3830,12 +3914,16 @@ class MagicAlchemyLab {
         const baseScore = 80 + this.gameState.slotCount * 35 + timeBonus;
         const scoreGain = Math.floor(baseScore * this.getEndlessScoreMultiplier());
         const coinReward = Math.max(8, Math.floor(scoreGain / 35));
+        
+        // Boost reward based on Story progress
+        const storyMultiplier = 1 + (this.data.highestLevel / 15);
+        const boostedReward = Math.floor(coinReward * storyMultiplier);
         const manaRecovery = 10 + this.gameState.slotCount * 4 + Math.floor((this.gameState.timeLeft || 0) / 2);
 
         this.gameState.score += scoreGain;
-        this.gameState.scoreCoins += coinReward;
+        this.gameState.scoreCoins += boostedReward;
         this.gameState.mana = Math.min(this.gameState.maxMana, this.gameState.mana + manaRecovery);
-        this.data.coins += coinReward;
+        this.data.coins += boostedReward;
         this.data.stats.endlessBestScore = Math.max(this.data.stats.endlessBestScore, this.gameState.score);
         this.data.stats.endlessBestDefeated = Math.max(this.data.stats.endlessBestDefeated, this.gameState.defeated);
         this.saveData({ showToast: false });
@@ -3870,12 +3958,23 @@ class MagicAlchemyLab {
             else if (this.gameState.turn <= 6) stars = 2;
         }
 
-        let reward = this.gameMode === 'endless' ? 10 : 20 * stars;
-        if (this.gameMode === 'daily') {
-            if (this.canClaimDailyReward()) {
-                reward = 500;
+        let reward = 20 * stars;
+        if (this.gameMode === 'story') {
+            // Level 30: 1000 start, Level 100: ~8000
+            if (this.currentLevel >= 30) {
+                const baseGrowth = 1000 + (this.currentLevel - 30) * 100;
+                reward = Math.floor(baseGrowth * (stars / 3));
+                // Ensure at least 1000 for 1 star at Lv 30+
+                if (reward < 1000) reward = 1000;
             } else {
-                reward = 10;
+                // Scaling from level 1 to 30
+                reward = Math.floor((20 + this.currentLevel * 10) * stars);
+            }
+        } else if (this.gameMode === 'daily') {
+            if (this.canClaimDailyReward()) {
+                reward = 1000; // Increased from 500
+            } else {
+                reward = 100; // Increased from 10
             }
         }
         this.gameState.dailyRewardGranted = this.gameMode === 'daily' && reward > 0;
@@ -3966,7 +4065,7 @@ class MagicAlchemyLab {
                         : '本輪配方已記錄進防衛紀錄冊。',
                     stars,
                     reward,
-                    actionText: this.gameMode === 'story' ? '回到首頁' : this.gameMode === 'daily' ? '回到首頁' : '回到首頁',
+                    actionText: this.gameMode === 'story' ? '回到首頁' : this.gameMode === 'daily' ? '回到首頁' : '撤退',
                     levelData
                 });
             });
@@ -3983,7 +4082,9 @@ class MagicAlchemyLab {
             this.saveData({ showToast: false });
         }
         if (window.audio) window.audio.playError();
-        this.particles.createExplosion(window.innerWidth / 2, window.innerHeight * 0.5, 20, { variant: 'mist', colors: ['#ffd6e0', '#d9d9d9', '#bde0fe'], distance: [20, 70], minSize: 10, maxSize: 18, duration: 1500 });
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+        const failColors = this.gameMode === 'endless' ? ['#2d243a', '#7b4bff', '#000'] : ['#ffd6e0', '#d9d9d9', '#bde0fe'];
+        this.particles.createExplosion(window.innerWidth / 2, window.innerHeight * 0.5, 20, { variant: 'mist', colors: failColors, distance: [20, 70], minSize: 10, maxSize: 18, duration: 1500 });
         this.updateGameUI();
 
         setTimeout(() => {
@@ -4044,7 +4145,7 @@ class MagicAlchemyLab {
                             : '本輪演算紀錄已封存，建議回據點整理節奏。',
                     stars: 0,
                     reward: 0,
-                    actionText: this.gameMode === 'daily' ? '回到據點' : this.gameMode === 'endless' ? '回到據點' : '回據點休息',
+                    actionText: this.gameMode === 'daily' ? '回到據點' : this.gameMode === 'endless' ? '撤退' : '回據點休息',
                     levelData,
                     leaderboardText: ''
                 });
@@ -4145,6 +4246,182 @@ class MagicAlchemyLab {
         this.els.msg.className = `show ${type}`;
         if (this.msgTimer) clearTimeout(this.msgTimer);
         this.msgTimer = setTimeout(() => this.els.msg.classList.remove('show'), 2000);
+    }
+
+    renderFamiliarPanel() {
+        if (!this.els.petInventoryGrid) return;
+        const catalog = this.getPetCatalog();
+        const owned = this.data.player.ownedPets || [];
+        const active = this.data.player.activePet;
+        const isAllOwned = owned.length >= catalog.length;
+
+        this.els.petInventoryGrid.innerHTML = catalog.map(pet => {
+            const isOwned = owned.includes(pet.id);
+            const isActive = active === pet.id;
+            
+            let imgStyle = pet.filter ? `filter: ${pet.filter}` : '';
+            if (pet.atlas) {
+                imgStyle += `; object-fit: cover; object-position: ${pet.atlas.x}% ${pet.atlas.y}%; width: 200%; height: 200%; max-width: none;`;
+            }
+
+            return `
+                <div class="pet-card ${isOwned ? 'owned' : ''} ${isActive ? 'active' : ''}" data-id="${pet.id}">
+                    <div class="pet-icon-wrap" style="overflow: hidden;">
+                        <img src="${pet.image}" class="pet-icon" style="${imgStyle}">
+                    </div>
+                    <span class="pet-name">${pet.name}</span>
+                </div>
+            `;
+        }).join('');
+
+        if (this.els.btnGachaDraw) {
+            if (isAllOwned) {
+                this.els.btnGachaDraw.disabled = true;
+                this.els.btnGachaDraw.textContent = '無法再取得使魔';
+            } else {
+                this.els.btnGachaDraw.disabled = this.data.coins < 4000;
+                this.els.btnGachaDraw.textContent = '召喚使魔';
+            }
+        }
+    }
+
+    drawFamiliar() {
+        const catalog = this.getPetCatalog();
+        const owned = this.data.player.ownedPets || [];
+        const unowned = catalog.filter(p => !owned.includes(p.id));
+
+        if (unowned.length === 0) {
+            this.showMessage('你已擁有目前所有的使魔夥伴！', 'info');
+            return;
+        }
+
+        if (this.data.coins < 4000) {
+            this.showMessage('星幣不足 4,000，無法進行召喚。', 'error');
+            return;
+        }
+        
+        this.data.coins -= 4000;
+        this.data.stats.coinsSpent += 4000;
+        this.updateGlobalUI();
+        if (window.audio) window.audio.playClick();
+
+        // Pick one randomly from unowned
+        const result = unowned[Math.floor(Math.random() * unowned.length)];
+
+        // Update data
+        if (!this.data.player.ownedPets) this.data.player.ownedPets = [];
+        this.data.player.ownedPets.push(result.id);
+        this.saveData({ showToast: false });
+
+        // Animation Start
+        this.els.gachaOverlay.classList.add('active');
+        this.els.gachaOverlay.classList.remove('reveal');
+        
+        // Reset Result View
+        this.els.gachaResultImg.src = result.image;
+        let imgStyle = result.filter ? `filter: ${result.filter}` : '';
+        if (result.atlas) {
+            imgStyle += `; object-fit: cover; object-position: ${result.atlas.x}% ${result.atlas.y}%; width: 200%; height: 200%; max-width: none;`;
+        } else {
+            imgStyle += `; object-fit: contain; width: 100%; height: 100%;`;
+        }
+        this.els.gachaResultImg.style = imgStyle;
+        this.els.gachaResultName.textContent = result.name;
+
+        // Magical buildup
+        const cx = window.innerWidth / 2;
+        const cy = window.innerHeight / 2;
+        
+        let buildupTimer = setInterval(() => {
+            this.particles.createExplosion(cx, cy, 5, {
+                variant: 'spark',
+                colors: ['#fff', '#7b4bff', '#ffd700'],
+                distance: [20, 100],
+                duration: 600
+            });
+        }, 100);
+
+        setTimeout(() => {
+            clearInterval(buildupTimer);
+            this.els.gachaOverlay.classList.add('reveal');
+            if (window.audio) window.audio.playSkill();
+            
+            // Grand Finale Celebration
+            this.particles.createCelebration(cx, cy);
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    this.particles.createExplosion(cx + (Math.random()-0.5)*200, cy + (Math.random()-0.5)*200, 20, {
+                        variant: 'spark',
+                        colors: ['#7b4bff', '#ffd700', '#fff'],
+                        distance: [50, 200],
+                        duration: 1500
+                    });
+                }, i * 200);
+            }
+
+            this.renderFamiliarPanel();
+        }, 1800);
+    }
+
+    setActivePet(petId) {
+        if (this.data.player.activePet === petId) {
+            this.data.player.activePet = null;
+        } else {
+            this.data.player.activePet = petId;
+        }
+        this.saveData({ showToast: false });
+        this.renderFamiliarPanel();
+        this.updatePetDisplay();
+    }
+
+    updatePetDisplay() {
+        const petId = this.data.player.activePet;
+        const catalog = this.getPetCatalog();
+        const pet = catalog.find(p => p.id === petId);
+
+        [this.els.hubPetCompanion, this.els.gamePetCompanion].forEach(el => {
+            if (!el) return;
+            if (pet) {
+                el.classList.add('active');
+                let style = `background-image: url(${pet.image}); background-size: contain; background-repeat: no-repeat; background-position: center;`;
+                if (pet.filter) style += ` filter: ${pet.filter};`;
+                el.style = style;
+            } else {
+                el.classList.remove('active');
+            }
+        });
+    }
+
+    initCheats() {
+        const sequence = 'ASDFGHJKLMN';
+        let input = '';
+        window.addEventListener('keydown', (e) => {
+            const key = e.key.toUpperCase();
+            if (sequence.includes(key)) {
+                input += key;
+                if (input === sequence) {
+                    this.activateCheats();
+                    input = '';
+                } else if (!sequence.startsWith(input)) {
+                    input = key;
+                }
+            } else {
+                input = '';
+            }
+        });
+    }
+
+    activateCheats() {
+        this.data.coins = 9999999;
+        this.data.stamina = 999;
+        this.data.highestLevel = 100;
+        this.saveData();
+        this.renderHubDashboard();
+        this.renderShop();
+        this.renderFamiliarPanel();
+        this.updateGlobalUI();
+        this.showMessage('✦ 開發者權限已解鎖！星幣與體力無限 ✦', 'success');
+        if (window.audio) window.audio.playSuccess();
     }
 }
 

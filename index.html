@@ -123,6 +123,7 @@
                     </div>
                     <div class="hero-portrait-wrap" id="btn-hero-interact">
                         <img id="hub-hero-image" src="assets/char_alchemist.png" alt="艾莉絲" class="hero-img">
+                        <div id="hub-pet-companion" class="pet-companion"></div>
                     </div>
                 </div>
 
@@ -209,7 +210,29 @@
                             </div>
                         </div>
                         <div class="inventory-grid" id="inventory-grid"></div>
+                        <div class="familiar-integrated-section" style="margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                            <div class="hub-panel-head" style="margin-bottom: 15px;">
+                                <div>
+                                    <span class="hub-panel-kicker">召喚夥伴</span>
+                                    <h3>使魔系統</h3>
+                                </div>
+                            </div>
+                            <div class="familiar-container" style="padding: 0; padding-bottom: 40px;">
+                                <div class="gacha-section">
+                                    <div class="gacha-price">
+                                        <img src="assets/icons/coin.png" alt="Coin" style="width:24px">
+                                        <span>4,000</span>
+                                    </div>
+                                    <button id="btn-gacha-draw" class="gacha-btn">召喚使魔</button>
+                                </div>
+                                <div class="pet-inventory" id="pet-inventory-grid" style="margin-top: 20px;">
+                                    <!-- 動態插入使魔卡片 -->
+                                </div>
+                            </div>
+                        </div>
                     </section>
+
+
 
                     <section class="hub-panel" data-panel="settings">
                         <div class="hub-panel-head">
@@ -288,6 +311,7 @@
                     <img src="assets/icons/nav_daily.png" alt="每日">
                     <span>每日</span>
                 </button>
+
                 <button class="hub-nav-btn" data-hub-target="settings">
                     <img src="assets/icons/nav_settings.png" alt="設定">
                     <span>設定</span>
@@ -327,6 +351,7 @@
                 <div class="combat-actor combat-player">
                     <div class="combat-portrait-frame">
                         <img id="game-player-image" src="assets/chars/female_stage1.png" alt="玩家角色">
+
                     </div>
                     <div class="combat-actor-meta">
                         <strong id="game-player-name">煉金術師</strong>
@@ -340,6 +365,7 @@
                         <div class="combat-hp-bar"><div id="combat-hp-fill"></div></div>
                     </div>
                 </div>
+
 
                 <div class="combat-center">
                     <div class="combat-mode-tag" id="combat-mode-tag">故事委託</div>
@@ -420,8 +446,21 @@
                     </div>
                 </div>
             </div>
+
             <div id="game-message"></div>
+            <div id="game-pet-companion" class="pet-companion battle-pet"></div>
         </section>
+
+        <!-- Gacha Overlay - Moved to top level for universal visibility -->
+        <div id="gacha-overlay" class="gacha-overlay">
+            <div class="gacha-flash" id="gacha-flash"></div>
+            <div class="gacha-burst"></div>
+            <div class="gacha-result-wrap" id="gacha-result-wrap">
+                <img id="gacha-result-img" src="" alt="Result">
+                <div class="gacha-result-name" id="gacha-result-name">使魔名稱</div>
+                <button class="btn-gacha-close" id="btn-gacha-close">立即領取</button>
+            </div>
+        </div>
 
         <!-- 稱號選擇視窗 -->
         <div id="title-modal" class="modal-overlay" aria-hidden="true" inert hidden>

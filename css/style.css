@@ -2028,6 +2028,45 @@ img.portrait-client {
         linear-gradient(180deg, rgba(53, 48, 82, 0.68), rgba(91, 72, 98, 0.42) 62%, rgba(255, 242, 225, 0.28));
     border-bottom: 1px solid rgba(255,255,255,0.58);
     box-shadow: inset 0 -18px 30px rgba(65, 42, 34, 0.1);
+    transition: background 0.8s ease;
+}
+#view-game.endless-battle.abyssal-theme .combat-stage {
+    background:
+        radial-gradient(circle at 50% 45%, rgba(123, 75, 255, 0.25), transparent 35%),
+        radial-gradient(circle at 48% 60%, rgba(255, 87, 153, 0.18), transparent 42%),
+        linear-gradient(180deg, #1a1625, #2d243a 65%, #3d304a);
+    border-bottom-color: rgba(255, 255, 255, 0.25);
+    box-shadow: inset 0 -22px 40px rgba(0, 0, 0, 0.4);
+}
+#view-game.endless-battle.abyssal-theme .combat-stage::after {
+    opacity: 0.4;
+    mix-blend-mode: overlay;
+}
+#view-game.endless-battle.abyssal-theme #history-display {
+    background: rgba(25, 22, 35, 0.88);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #e0e0e0;
+}
+#view-game.endless-battle.abyssal-theme .history-row {
+    background: rgba(255, 255, 255, 0.05);
+}
+#view-game.endless-battle.abyssal-theme .history-row strong {
+    color: #fff;
+}
+#view-game.endless-battle .combat-enemy.is-boss {
+    filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.4));
+}
+#view-game.endless-battle .combat-enemy.is-boss .combat-portrait-frame img {
+    transform: scale(1.35) translateY(-5px);
+    filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.5)) brightness(1.1) saturate(1.2);
+}
+#view-game.endless-battle .combat-enemy.is-boss .combat-actor-meta {
+    background: rgba(255, 245, 200, 0.98);
+    border: 2px solid #ffca28;
+}
+#view-game.endless-battle .combat-enemy.is-boss .combat-actor-meta strong {
+    color: #d32f2f;
+    font-size: 13px;
 }
 #view-game.endless-battle .combat-stage::before {
     content: '';
@@ -3208,3 +3247,475 @@ img.portrait-client {
         scroll-behavior: auto !important;
     }
 }
+
+/* ----- Stage 4 & Familiars & Boss UI ----- */
+.familiar-img {
+    position: absolute;
+    width: clamp(70px, 10dvh, 100px);
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    animation: familiarFloat 3.5s ease-in-out infinite;
+    mix-blend-mode: multiply; /* If white background */
+    border-radius: 50%;
+}
+#game-player-familiar {
+    right: -30px;
+    top: 30px;
+    width: 60px;
+}
+@keyframes familiarFloat {
+    0%, 100% { transform: translateY(-50%) scale(1); }
+    50% { transform: translateY(calc(-50% - 15px)) scale(1.05); }
+}
+
+#view-game.endless-battle.void-battle {
+    background: linear-gradient(180deg, #100622, #05010a 60%, #000000);
+}
+#view-game.endless-battle.void-battle::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(138, 43, 226, 0.1) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+#view-game.endless-battle .combat-enemy.boss-enemy .combat-portrait-frame img {
+    max-height: clamp(140px, 22dvh, 190px);
+    filter: drop-shadow(0 0 35px rgba(255, 30, 60, 0.8)) !important;
+}
+#view-game.endless-battle .combat-enemy.boss-enemy .combat-actor-meta {
+    background: rgba(80, 10, 20, 0.8);
+    border: 1px solid rgba(255, 100, 100, 0.5);
+    color: #ffcccc;
+}
+
+/* ----- 100-Point Version Enhancements ----- */
+
+/* Hub Immersive Background */
+#view-hub {
+    background: url('../assets/bg/hub_bg.png') no-repeat center center;
+    background-size: cover;
+    transition: background 1s ease-in-out;
+}
+
+#view-hub::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, transparent 0%, rgba(13, 5, 25, 0.6) 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+#view-hub .hub-content {
+    z-index: 2;
+}
+
+/* Master Aura for Stage 4 */
+.hero-img.stage4-aura {
+    filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.7)) drop-shadow(0 0 40px rgba(138, 43, 226, 0.4));
+    animation: masterPulse 3s ease-in-out infinite alternate;
+}
+
+@keyframes masterPulse {
+    0% { filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.5)) brightness(1); transform: scale(1); }
+    100% { filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.9)) brightness(1.2); transform: scale(1.02); }
+}
+
+/* Bestiary Styles */
+.bestiary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.monster-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 8px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    filter: grayscale(100%) opacity(0.5);
+}
+
+.monster-card.unlocked {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(169, 222, 249, 0.4);
+    filter: grayscale(0%) opacity(1);
+}
+
+.monster-card img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: contain;
+    margin-bottom: 4px;
+}
+
+.monster-card span {
+    font-size: 10px;
+    color: #fff;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Star Rating in Mission Grid */
+.level-card .star-rating {
+    display: flex;
+    gap: 2px;
+    margin-top: 4px;
+}
+
+.level-card .star-rating img {
+    width: 12px;
+    height: 12px;
+    filter: grayscale(1);
+    opacity: 0.3;
+}
+
+.level-card .star-rating img.earned {
+    filter: grayscale(0);
+    opacity: 1;
+}
+
+/* Familiar System */
+.hub-panel[data-panel="familiar"] {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+}
+.hub-panel[data-panel="familiar"].active {
+    display: flex;
+}
+
+.familiar-container {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    height: 100%;
+    overflow-y: auto;
+    padding-bottom: 100px;
+}
+
+.gacha-section {
+    background: linear-gradient(135deg, rgba(83, 76, 122, 0.4), rgba(45, 36, 58, 0.6));
+    border-radius: 24px;
+    padding: 24px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: var(--shadow-soft);
+    position: relative;
+    overflow: hidden;
+}
+
+.gacha-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(123, 75, 255, 0.1), transparent 70%);
+    pointer-events: none;
+}
+
+.gacha-price {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 20px;
+    font-weight: 900;
+    color: #ffd700;
+    margin-bottom: 16px;
+}
+
+.gacha-btn {
+    width: 100%;
+    max-width: 280px;
+    padding: 16px;
+    font-size: 18px;
+    font-weight: 900;
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.gacha-btn:active {
+    transform: scale(0.95);
+}
+
+.gacha-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.pet-inventory {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 12px;
+}
+
+.pet-card {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    filter: grayscale(1);
+    opacity: 0.6;
+}
+
+.pet-card.owned {
+    filter: none;
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.pet-card.active {
+    border-color: var(--color-primary);
+    background: rgba(123, 75, 255, 0.2);
+    box-shadow: 0 0 15px rgba(123, 75, 255, 0.3);
+}
+
+.pet-card.active::after {
+    content: 'E';
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--color-primary);
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pet-icon-wrap {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 12px;
+}
+
+.pet-icon {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.pet-name {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--color-text-main);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+/* Battle & Hub Pet Positioning */
+.pet-companion {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    pointer-events: none;
+    z-index: 10;
+    animation: petFloat 3s ease-in-out infinite;
+    display: none;
+}
+
+.pet-companion.active {
+    display: block;
+}
+
+@keyframes petFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.hero-portrait-wrap .pet-companion {
+    top: 0;
+    right: -40px;
+    width: 80px;
+    height: 80px;
+}
+
+.combat-player .pet-companion {
+    top: -40px;
+    left: 20px;
+}
+
+/* Battle Pet Positioning - Dynamic based on Mode */
+.battle-pet {
+    position: absolute !important;
+    width: 90px;
+    height: 90px;
+    z-index: 150;
+    filter: drop-shadow(0 0 15px rgba(255,255,255,0.4));
+    transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: none;
+}
+
+.battle-pet.active {
+    display: block;
+    animation: battlePetFloat 4s ease-in-out infinite !important;
+}
+
+/* Story/Daily Mode Position: Right of the Mission Info - Enlarged 1.5x */
+#view-game:not(.endless-battle) .battle-pet {
+    top: 150px;
+    right: 20px;
+    width: 140px;
+    height: 140px;
+}
+
+/* Endless Mode Position: Right side area (Above Cauldron) */
+#view-game.endless-battle .battle-pet {
+    top: auto !important;
+    bottom: 220px !important;
+    right: 15px !important;
+    width: 110px;
+    height: 110px;
+}
+
+@keyframes battlePetFloat {
+    0%, 100% { transform: translateY(0) rotate(-5deg); }
+    50% { transform: translateY(-15px) rotate(5deg); }
+}
+
+/* Gacha Animation - More Dramatic & Contained */
+.gacha-overlay {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 40%, rgba(45, 36, 58, 0.98), #000);
+    z-index: 5000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+}
+
+
+.gacha-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.gacha-burst {
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, #fff, var(--color-primary), transparent 70%);
+    border-radius: 50%;
+    transform: scale(0);
+}
+
+.gacha-overlay.active .gacha-burst {
+    animation: burst 1.5s ease-out forwards;
+}
+
+@keyframes burst {
+    0% { transform: scale(0); opacity: 1; }
+    50% { transform: scale(1.5); opacity: 1; }
+    100% { transform: scale(2); opacity: 0; }
+}
+
+.gacha-result-wrap {
+    text-align: center;
+    transform: scale(0.5);
+    opacity: 0;
+    transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.gacha-flash {
+    position: absolute;
+    inset: 0;
+    background: white;
+    z-index: 2001;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.gacha-overlay.reveal .gacha-flash {
+    animation: flashEffect 1.2s ease-out forwards;
+}
+
+@keyframes flashEffect {
+    0% { opacity: 0; }
+    10% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+.gacha-overlay.reveal .gacha-result-wrap {
+    animation: bounceIn 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    opacity: 1;
+}
+
+@keyframes bounceIn {
+    0% { transform: scale(0.2); opacity: 0; }
+    60% { transform: scale(1.0); opacity: 1; }
+    100% { transform: scale(0.8); opacity: 1; }
+}
+
+.gacha-result-wrap img {
+    width: 180px;
+    height: 180px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 30px rgba(255,255,255,0.8)) drop-shadow(0 0 10px var(--color-primary));
+    animation: petEntrance 1s ease-out;
+}
+
+@keyframes petEntrance {
+    from { filter: brightness(0) blur(20px); }
+    to { filter: brightness(1) blur(0); }
+}
+
+
+
+.gacha-result-name {
+    color: white;
+    font-size: 24px;
+    font-weight: 900;
+    margin-top: 16px;
+    text-shadow: 0 0 10px var(--color-primary);
+}
+
+.btn-gacha-close {
+    margin-top: 40px;
+    background: white;
+    color: black;
+    padding: 12px 32px;
+    border-radius: 30px;
+    font-weight: 900;
+    border: none;
+    cursor: pointer;
+}
+

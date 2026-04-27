@@ -2012,9 +2012,9 @@ img.portrait-client {
 }
 #view-game.endless-battle .combat-stage {
     position: relative;
-    flex: 0 0 clamp(190px, 28dvh, 260px);
-    min-height: clamp(190px, 28dvh, 260px);
-    max-height: 260px;
+    flex: 0 0 clamp(160px, 24dvh, 210px);
+    min-height: clamp(160px, 24dvh, 210px);
+    max-height: 210px;
     display: block;
     align-items: stretch;
     padding: 0 var(--content-side-padding) 12px;
@@ -2030,9 +2030,9 @@ img.portrait-client {
     content: '';
     position: absolute;
     left: 50%;
-    bottom: 28px;
-    width: min(72%, 330px);
-    height: 38px;
+    bottom: 12px;
+    width: min(60%, 240px);
+    height: 20px;
     transform: translateX(-50%);
     border-radius: 50%;
     background: radial-gradient(ellipse, rgba(38, 30, 48, 0.32), rgba(38, 30, 48, 0));
@@ -2085,7 +2085,7 @@ img.portrait-client {
 }
 #view-game.endless-battle .combat-timer {
     position: absolute;
-    top: 36px;
+    top: 45px;
     right: 0;
     left: auto;
     bottom: auto;
@@ -2093,8 +2093,8 @@ img.portrait-client {
     min-width: 120px;
     transform: none;
     gap: 6px;
-    padding: 4px 12px 10px 12px;
-    border-radius: 0 0 18px 18px;
+    padding: 6px 12px 10px 12px;
+    border-radius: 12px;
     background: rgba(255, 252, 248, 0.95);
     box-shadow: 0 8px 18px rgba(43, 30, 42, 0.16);
     border: var(--glass-border);
@@ -2114,7 +2114,7 @@ img.portrait-client {
 #view-game.endless-battle .combat-player {
     position: absolute;
     left: 4px;
-    top: 30px;
+    top: 10px;
     bottom: auto;
     z-index: 10;
     width: 90px;
@@ -2151,7 +2151,7 @@ img.portrait-client {
     left: 50%;
     transform: translateX(-50%);
     width: min(70%, 285px);
-    top: 40px;
+    top: 24px;
     height: clamp(88px, 14dvh, 120px);
     background: transparent;
 }
@@ -2170,11 +2170,10 @@ img.portrait-client {
     min-width: 120px;
     margin: 0;
     padding: 6px 12px;
-    border-radius: 18px 18px 0 0;
+    border-radius: 12px;
     background: rgba(255, 252, 248, 0.95);
     box-shadow: 0 8px 18px rgba(43, 30, 42, 0.16);
     border: var(--glass-border);
-    border-bottom: none;
     z-index: 12;
     pointer-events: auto;
 }
@@ -2821,8 +2820,8 @@ img.portrait-client {
     }
 
     #view-game.endless-battle .combat-stage {
-        flex-basis: clamp(196px, 27dvh, 248px);
-        min-height: clamp(196px, 27dvh, 248px);
+        flex-basis: clamp(160px, 24dvh, 210px);
+        min-height: clamp(160px, 24dvh, 210px);
         padding-bottom: 8px;
     }
 
@@ -3012,7 +3011,7 @@ img.portrait-client {
     }
 
     #view-game.endless-battle .combat-stage {
-        min-height: 232px;
+        min-height: 180px;
     }
 
     #view-game.endless-battle .combat-center {
@@ -3024,7 +3023,7 @@ img.portrait-client {
     }
 
     #view-game.endless-battle .combat-player {
-        top: 36px;
+        top: 8px;
         width: 82px;
     }
 

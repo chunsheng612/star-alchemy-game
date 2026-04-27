@@ -2775,6 +2775,22 @@ img.portrait-client {
     .combat-actor-meta {
         padding: 7px 6px 8px;
     }
+
+    #view-game.endless-battle .action-container {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: stretch;
+    }
+
+    #view-game.endless-battle .action-container .btn {
+        min-width: 0;
+        padding-left: 8px;
+        padding-right: 8px;
+        font-size: 13px;
+        line-height: 1.25;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
 }
 
 @media (max-width: 380px) {
@@ -2896,7 +2912,7 @@ img.portrait-client {
     }
 
     #view-game.endless-battle .action-container {
-        flex-direction: row;
+        grid-template-columns: 1fr;
     }
 }
 

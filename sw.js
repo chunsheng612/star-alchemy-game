@@ -1,5 +1,5 @@
-const CACHE_NAME = "staralchemy-shell-v11";
-const ASSET_VERSION = "20260427-syncfix3";
+const CACHE_NAME = "staralchemy-shell-v12";
+const ASSET_VERSION = "20260427-layoutfix4";
 const CORE_ASSETS = [
     "./",
     "./index.html",

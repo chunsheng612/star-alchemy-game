@@ -369,6 +369,7 @@ class MagicAlchemyLab {
             btnCloudSync: document.getElementById('btn-cloud-sync'),
             btnDeleteData: document.getElementById('btn-delete-data'),
             settingsAuthCard: document.getElementById('settings-auth-card'),
+            inputConsole: document.getElementById('input-console'),
             slotsContainer: document.getElementById('slots-container'),
             questWidget: document.getElementById('quest-widget'),
             combatStage: document.getElementById('combat-stage'),
@@ -1833,8 +1834,10 @@ class MagicAlchemyLab {
 
         const syncLayout = () => this.updateLayoutMetrics();
         window.addEventListener('resize', syncLayout);
+        window.addEventListener('orientationchange', syncLayout);
         window.addEventListener('load', syncLayout);
         window.visualViewport?.addEventListener('resize', syncLayout);
+        window.visualViewport?.addEventListener('scroll', syncLayout);
         document.fonts?.ready.then(syncLayout);
 
         // Stamina auto-regen logic
@@ -1890,10 +1893,12 @@ class MagicAlchemyLab {
             ? this.els.globalHeader.offsetHeight
             : readMetric('--global-header-height', 112);
         const gameHeaderHeight = this.els.gameHeader?.offsetHeight || readMetric('--game-header-height', 152);
+        const inputConsoleHeight = Math.ceil(this.els.inputConsole?.getBoundingClientRect().height || 0);
         if (viewportHeight > 0) {
             this.els.appContainer.style.setProperty('--app-visible-height', `${viewportHeight}px`);
         }
         this.els.appContainer.style.setProperty('--runtime-safe-bottom', `${runtimeSafeBottom}px`);
+        this.els.appContainer.style.setProperty('--input-console-height', `${inputConsoleHeight}px`);
         this.els.appContainer.style.setProperty('--global-header-height', `${globalHeaderHeight}px`);
         this.els.appContainer.style.setProperty('--game-header-height', `${gameHeaderHeight}px`);
     }
@@ -4093,6 +4098,7 @@ class MagicAlchemyLab {
         const submitCost = this.getSubmitCost();
         this.els.btnSubmit.textContent = this.gameMode === 'endless' ? `施放咒語 (-${submitCost})` : `啟動提煉 (-${submitCost})`;
         this.updateCombatStage();
+        requestAnimationFrame(() => this.updateLayoutMetrics());
     }
 
     addHistoryRow(guess, res) {

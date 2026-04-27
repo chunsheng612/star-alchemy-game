@@ -19,6 +19,7 @@
     --safe-left: env(safe-area-inset-left, 0px);
     --runtime-safe-bottom: 0px;
     --app-visible-height: 100dvh;
+    --input-console-height: 0px;
     --content-side-padding: clamp(16px, 4vw, 22px);
     --global-header-height: 112px;
     --game-header-height: 152px;
@@ -1797,7 +1798,7 @@ img.portrait-client {
 .buy-btn:disabled { background:#ccc; box-shadow:none; pointer-events:none;}
 
 /* Game */
-#view-game { min-height:0; height:100%; max-height:100%; overflow:hidden; background:rgba(255,255,255,0.18); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
+#view-game { position:relative; min-height:0; height:100%; max-height:100%; padding-bottom:var(--input-console-height); overflow:hidden; background:rgba(255,255,255,0.18); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
 .game-header { position:sticky; top:0; z-index:30; flex:0 0 auto; padding:calc(var(--safe-top) + 14px) var(--content-side-padding) 16px; background:rgba(255,255,255,0.82); border-bottom:var(--glass-border); box-shadow:0 8px 18px rgba(0,0,0,0.08); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
 .header-main { display:flex; align-items:center; gap:14px; margin-bottom:14px; }
 .quit-btn { background:white; border:none; min-height:46px; padding:10px 14px; border-radius:16px; font-weight:800; color:var(--color-error); box-shadow:var(--shadow-soft); white-space:nowrap; }
@@ -2294,8 +2295,12 @@ img.portrait-client {
 /* Input Console */
 #input-console { 
     width: 100%;
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:0;
     flex-shrink: 0;
-    margin-top: auto;
+    margin-top: 0;
     background:rgba(255,255,255,0.9); border-top:var(--glass-border); padding:18px var(--content-side-padding); 
     padding-bottom:calc(max(var(--safe-bottom), var(--runtime-safe-bottom)) + 16px); border-radius:30px 30px 0 0; 
     box-shadow:0 -10px 30px rgba(0,0,0,0.05); display:flex; flex-direction:column; gap:15px; 

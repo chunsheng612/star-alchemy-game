@@ -377,6 +377,7 @@ class MagicAlchemyLab {
             gamePlayerTitle: document.getElementById('game-player-title'),
             combatModeTag: document.getElementById('combat-mode-tag'),
             combatTimer: document.getElementById('combat-timer'),
+            combatTimerLabelText: document.getElementById('combat-timer-label-text'),
             combatTimerValue: document.getElementById('combat-timer-value'),
             combatTimerFill: document.getElementById('combat-timer-fill'),
             combatHp: document.getElementById('combat-hp'),
@@ -524,7 +525,7 @@ class MagicAlchemyLab {
             }
         ];
 
-        return chapters.flatMap((chapter, chapterIndex) =>
+        const baseLevels = chapters.flatMap((chapter, chapterIndex) =>
             chapter.orders.map((order, orderIndex) => {
                 const id = chapterIndex * 10 + orderIndex + 1;
                 const slotCount = id >= 20 ? 6 : id >= 10 ? 5 : 4;
@@ -541,6 +542,166 @@ class MagicAlchemyLab {
                 });
             })
         );
+
+        return baseLevels.concat(this.generateExtendedStoryLevels(baseLevels.length));
+    }
+
+    generateExtendedStoryLevels(baseCount = 30) {
+        const chapterBlueprints = [
+            {
+                key: 'harbor_lockdown',
+                title: '霧港封鎖',
+                mentor: '霧港的來單開始夾帶航道、封鎖與調度的壓力。',
+                intro: '霧港一封，整個邊境物流都會慢下來。',
+                scene: '霧港航道',
+                prefix: '霧港',
+                clientOrg: '霧港調度署'
+            },
+            {
+                key: 'prism_spire',
+                title: '稜鏡高塔',
+                mentor: '高塔觀測鏈要求的不只是正確，還要能立刻上線。',
+                intro: '觀測塔一旦失真，整片防區的判讀都會跟著偏掉。',
+                scene: '高塔觀測鏈',
+                prefix: '稜塔',
+                clientOrg: '高塔觀測局'
+            },
+            {
+                key: 'rift_supply',
+                title: '裂谷補給',
+                mentor: '裂谷補給線上的每一瓶藥劑，都得能在顛簸裡保持穩定。',
+                intro: '裂谷路線太長，失誤一旦進了車隊就來不及追回。',
+                scene: '裂谷輸送線',
+                prefix: '裂谷',
+                clientOrg: '裂谷補給隊'
+            },
+            {
+                key: 'obsidian_trace',
+                title: '黑曜追跡',
+                mentor: '黑曜邊線的委託更狠，規格通常只給一次。',
+                intro: '追跡線需要的是乾淨、快，還有不允許重來的穩定。',
+                scene: '黑曜邊線',
+                prefix: '黑曜',
+                clientOrg: '黑曜巡跡班'
+            },
+            {
+                key: 'winter_watch',
+                title: '冬境長夜',
+                mentor: '進入冬境後，配方要能扛住的不只是規格，還有長夜。',
+                intro: '冬境的長夜會放大每一次遲疑，慢半拍就可能整線斷掉。',
+                scene: '冬境哨站',
+                prefix: '冬境',
+                clientOrg: '冬境哨站'
+            },
+            {
+                key: 'eclipse_corridor',
+                title: '星蝕迴廊',
+                mentor: '七格委託正式開放，任何一格都不再只是陪襯。',
+                intro: '星蝕迴廊的題目開始逼我同時顧全節奏、結構和收尾。',
+                scene: '星蝕迴廊',
+                prefix: '星蝕',
+                clientOrg: '迴廊演算室'
+            },
+            {
+                key: 'royal_exam',
+                title: '王城總驗',
+                mentor: '王城總驗只看結果，沒有任何多餘的解釋空間。',
+                intro: '最終階段的委託全都直指王城防線，我得把每一步都壓到最穩。',
+                scene: '王城防衛圈',
+                prefix: '王城',
+                clientOrg: '王城審核廳'
+            }
+        ];
+
+        return chapterBlueprints.flatMap((chapter, chapterIndex) => {
+            const slotCount = chapterIndex >= 5 ? 7 : 6;
+            const templates = this.getAdvancedStoryTemplates(slotCount);
+            const orderTitles = this.getAdvancedStoryOrderTitles(chapter.prefix);
+            const names = ['瑪婕', '拓伊', '賽娜', '赫嵐', '法洛', '伊玟', '諾亞', '璃莎', '佩洛', '席安'];
+            const roles = ['調度官', '觀測員', '封存師', '通訊員', '護運手', '醫官', '守塔員', '檔案官', '技師', '審核員'];
+
+            return Array.from({ length: 10 }, (_, orderIndex) => {
+                const id = baseCount + chapterIndex * 10 + orderIndex + 1;
+                const template = templates[(orderIndex + chapterIndex) % templates.length];
+                const timeLimit = this.getGeneratedStoryTimeLimit(id, slotCount, orderIndex);
+                const client = `${chapter.clientOrg} ${roles[orderIndex % roles.length]} ${names[(orderIndex + chapterIndex) % names.length]}`;
+                const title = orderTitles[orderIndex];
+                const clue = `${template.storyHint(slotCount)}${timeLimit ? ` 需在 ${timeLimit} 秒內完成並提交。` : ''}`;
+                const clientName = names[(orderIndex + chapterIndex) % names.length];
+
+                return this.normalizePuzzleDefinition({
+                    id,
+                    chapter: chapter.title,
+                    chapterKey: chapter.key,
+                    chapterIndex: 3 + chapterIndex,
+                    mentor: chapter.mentor,
+                    slotCount,
+                    name: `委託 #${id.toString().padStart(2, '0')}：${title}`,
+                    title,
+                    client,
+                    request: `${template.request}${timeLimit ? ' 本次還附帶限時提交要求。' : ''}`,
+                    rule: template.rule,
+                    ruleLabel: template.ruleLabel,
+                    storyClue: clue,
+                    intro: `${chapter.intro}${timeLimit ? ` 這次委託還要求我每次嘗試都得在 ${timeLimit} 秒內完成。` : ''}`,
+                    perfect: `${clientName} 看過成品後只點了一次頭，這瓶已能直接送進 ${chapter.scene} 的正式流程。`,
+                    good: `${clientName} 收下了成品，表示規格有過，但下一批還得再更穩一點。`,
+                    rough: `${clientName} 勉強接受這份成品，提醒我別把邊境流程建立在僥倖上。`,
+                    fail: `${clientName} 把失敗樣品退回來，${chapter.scene} 的流程只能先停在這一步。`,
+                    timeLimit
+                });
+            });
+        });
+    }
+
+    getAdvancedStoryOrderTitles(prefix = '邊境') {
+        return [
+            `${prefix}封鎖列印`,
+            `${prefix}巡燈導流`,
+            `${prefix}倉印校正`,
+            `${prefix}回聲封條`,
+            `${prefix}脈衝護欄`,
+            `${prefix}夜航節拍`,
+            `${prefix}抑霧封箱`,
+            `${prefix}觀測回環`,
+            `${prefix}補給轉譜`,
+            `${prefix}總驗存檔`
+        ];
+    }
+
+    getAdvancedStoryTemplates(slotCount = 6) {
+        const templates = [
+            { rule: 'three-types', ruleLabel: '三材編列', storyHint: () => '全配方只會使用 3 種素材，而且這 3 種都一定會出現。', request: '這批調配只能留下三種明確訊號，避免現場誤判。' },
+            { rule: 'weighted', ruleLabel: '主核重壓', storyHint: (count) => `會有 1 種素材明顯主導整體，至少會佔到 ${Math.floor(count / 2) + 1} 格。`, request: '委託要求有一個夠穩的主核，把整批藥劑壓住。' },
+            { rule: 'no-adjacent', ruleLabel: '避鄰抗擾', storyHint: () => '任何相鄰兩格都不會出現相同素材。', request: '相鄰反應不能互撞，整體節奏要乾淨分開。' },
+            { rule: 'alternating', ruleLabel: '交錯節拍', storyHint: () => '只會出現 2 種素材，並且會固定交錯排列。', request: '這份配方要有穩定拍點，讓後續流程能直接跟上。' },
+            { rule: 'palindrome', ruleLabel: '鏡面回文', storyHint: () => '整體會以前後鏡像的方式排列。', request: '前後結構必須完全對映，否則校準值會整段偏掉。' },
+            { rule: 'split-pairs', ruleLabel: '雙對拆列', storyHint: (count) => `會形成 2 組成對素材，外加 ${count - 4} 個單點素材。`, request: '要先把成對訊號架起來，再留單點去做尾段修正。' },
+            { rule: 'triplet', ruleLabel: '三重主核', storyHint: () => '其中 1 種素材會剛好出現 3 次，其餘素材各 1 次。', request: '這批需要三重主核去穩住主反應，其他位置只做陪襯。' }
+        ];
+
+        if (slotCount === 6) {
+            templates.push(
+                { rule: 'twin-pairs', ruleLabel: '三對列陣', storyHint: () => '整體會形成 3 組成對素材。', request: '委託要把整批訊號拆成三組對位，方便前線快速辨識。' },
+                { rule: 'spectrum', ruleLabel: '全譜護壁', storyHint: () => '五種素材都會出現，並且其中 1 種會再重複 1 次。', request: '這次需要全譜覆蓋，再額外補上一層強化核。' },
+                { rule: 'crown', ruleLabel: '冠式重心', storyHint: () => '第 1、6 格相同，第 2、5 格相同，整體會形成明確重心。', request: '整體結構必須鎖出明確重心，首尾不能有任何漂移。' },
+                { rule: 'bookend', ruleLabel: '封環首尾', storyHint: () => '第 1 格與最後 1 格必定相同，中間每格都要和首尾不同。', request: '這批封環液要求首尾完全呼應，中段則必須各自獨立。' }
+            );
+            return templates;
+        }
+
+        return templates.concat([
+            { rule: 'bookend-pair', ruleLabel: '首尾雙鎖', storyHint: () => '首尾會相同，另外還會有 1 種素材剛好成對出現 2 次。', request: '委託要先鎖住首尾，再用一組成對素材把中段壓穩。' },
+            { rule: 'spectrum-plus', ruleLabel: '全譜雙補', storyHint: () => '五種素材都會出現，並且其中 2 種會各再多出現 1 次。', request: '這批藥劑要先覆蓋全譜，再額外補兩段強化訊號。' }
+        ]);
+    }
+
+    getGeneratedStoryTimeLimit(levelId, slotCount, orderIndex) {
+        const cycleIndex = (levelId - 1) % 10;
+        if (![1, 4, 7].includes(cycleIndex)) return 0;
+        const chapterDepth = Math.floor((levelId - 31) / 10);
+        const base = slotCount >= 7 ? 25 : 30;
+        return Math.max(slotCount >= 7 ? 18 : 22, base - chapterDepth * 2 - (orderIndex % 2));
     }
 
     getCharacterRoster() {
@@ -1298,10 +1459,14 @@ class MagicAlchemyLab {
                 return `${slotCount} 格都要不同，任何素材都不能重複。`;
             case 'repeat-one':
                 return `${slotCount} 格裡只有 1 種素材會出現 2 次，其餘素材都只出現 1 次。`;
+            case 'triplet':
+                return '會有 1 種素材剛好出現 3 次，其餘素材各出現 1 次。';
             case 'three-types':
                 return `${slotCount} 格只會使用 3 種素材，而且這 3 種都一定會出現。`;
             case 'bookend':
                 return `第 1 格與第 ${slotCount} 格必定相同，而且首尾素材只會出現這 2 次；中間每格都要和首尾不同。`;
+            case 'bookend-pair':
+                return '首尾素材會相同，另外還會有 1 種素材再成對出現 2 次，其餘位置各不相同。';
             case 'twin-pairs':
                 return `${slotCount} 格會剛好形成 ${slotCount / 2} 組成對素材。`;
             case 'split-pairs':
@@ -1316,6 +1481,8 @@ class MagicAlchemyLab {
                 return slotCount <= this.symbols.length
                     ? `${slotCount} 格必須全部不同。`
                     : `${this.symbols.length} 種素材都會出現，並且其中 1 種會再重複 1 次。`;
+            case 'spectrum-plus':
+                return `${this.symbols.length} 種素材都會出現，並且其中 2 種會各再重複 1 次。`;
             case 'palindrome':
                 return '整體會以前後鏡像的方式排列。';
             case 'crown':
@@ -1327,10 +1494,12 @@ class MagicAlchemyLab {
 
     normalizePuzzleDefinition(puzzle) {
         if (!puzzle) return puzzle;
+        const resolvedClue = puzzle.storyClue || puzzle.clue || this.getRuleClue(puzzle.rule, puzzle.slotCount);
         return {
             ...puzzle,
             storyClue: puzzle.storyClue || puzzle.clue || '',
-            clue: this.getRuleClue(puzzle.rule, puzzle.slotCount)
+            clue: resolvedClue,
+            ruleClue: this.getRuleClue(puzzle.rule, puzzle.slotCount)
         };
     }
 
@@ -1711,10 +1880,20 @@ class MagicAlchemyLab {
             const current = parseFloat(getComputedStyle(this.els.appContainer).getPropertyValue(name));
             return Number.isFinite(current) && current > 0 ? current : fallback;
         };
+        const viewportHeight = Math.round(window.visualViewport?.height || window.innerHeight || 0);
+        const viewportOffsetTop = Math.max(0, Math.round(window.visualViewport?.offsetTop || 0));
+        const runtimeSafeBottom = Math.max(
+            0,
+            Math.round((window.innerHeight || viewportHeight) - viewportHeight - viewportOffsetTop)
+        );
         const globalHeaderHeight = this.els.globalHeader && !this.els.globalHeader.classList.contains('hidden')
             ? this.els.globalHeader.offsetHeight
             : readMetric('--global-header-height', 112);
         const gameHeaderHeight = this.els.gameHeader?.offsetHeight || readMetric('--game-header-height', 152);
+        if (viewportHeight > 0) {
+            this.els.appContainer.style.setProperty('--app-visible-height', `${viewportHeight}px`);
+        }
+        this.els.appContainer.style.setProperty('--runtime-safe-bottom', `${runtimeSafeBottom}px`);
         this.els.appContainer.style.setProperty('--global-header-height', `${globalHeaderHeight}px`);
         this.els.appContainer.style.setProperty('--game-header-height', `${gameHeaderHeight}px`);
     }
@@ -3061,6 +3240,7 @@ class MagicAlchemyLab {
 
         this.updatePlayerCombatPortrait();
         const isEndless = this.gameMode === 'endless';
+        const hasStoryTimer = this.gameMode === 'story' && Number.isFinite(this.gameState.timeLimit) && this.gameState.timeLimit > 0;
         this.els.viewGame?.classList.toggle('endless-battle', isEndless);
         this.els.combatStage.classList.toggle('is-endless', isEndless);
         this.els.combatModeTag.textContent = isEndless
@@ -3069,13 +3249,18 @@ class MagicAlchemyLab {
                 ? '每日挑戰'
                 : '故事委託';
 
-        this.els.combatTimer?.classList.toggle('hidden', !isEndless);
+        if (this.els.combatTimerLabelText) {
+            this.els.combatTimerLabelText.textContent = isEndless ? '攻擊倒數' : '限時提交';
+        }
+        this.els.combatTimer?.classList.toggle('hidden', !(isEndless || hasStoryTimer));
         this.els.combatHp?.classList.toggle('hidden', !isEndless);
         this.els.combatEnemy?.classList.toggle('hidden', !isEndless);
 
         if (isEndless) {
             this.updateEndlessHud();
             this.updateEnemyUI();
+        } else if (hasStoryTimer) {
+            this.updateEndlessHud();
         }
     }
 
@@ -3092,10 +3277,11 @@ class MagicAlchemyLab {
     }
 
     updateEndlessHud() {
-        if (!this.gameState.maxHp) return;
-        const hpPct = Math.max(0, Math.min(100, (this.gameState.hp / this.gameState.maxHp) * 100));
-        if (this.els.combatHpValue) this.els.combatHpValue.textContent = `${this.gameState.hp} / ${this.gameState.maxHp}`;
-        if (this.els.combatHpFill) this.els.combatHpFill.style.width = `${hpPct}%`;
+        if (this.gameState.maxHp) {
+            const hpPct = Math.max(0, Math.min(100, (this.gameState.hp / this.gameState.maxHp) * 100));
+            if (this.els.combatHpValue) this.els.combatHpValue.textContent = `${this.gameState.hp} / ${this.gameState.maxHp}`;
+            if (this.els.combatHpFill) this.els.combatHpFill.style.width = `${hpPct}%`;
+        }
 
         if (this.gameState.timeLimit && this.els.combatTimerFill) {
             const timePct = Math.max(0, Math.min(100, (this.gameState.timeLeft / this.gameState.timeLimit) * 100));
@@ -3122,6 +3308,38 @@ class MagicAlchemyLab {
                 this.handleEndlessTimeout();
             }
         }, 1000);
+    }
+
+    startStoryTimer() {
+        this.clearCombatTimer();
+        if (this.gameMode !== 'story' || this.gameState.gameOver || !this.gameState.timeLimit) return;
+
+        this.gameState.timeLeft = this.gameState.timeLimit;
+        this.updateEndlessHud();
+
+        this.combatTimerId = setInterval(() => {
+            if (this.gameMode !== 'story' || this.gameState.solved || this.els.modal.classList.contains('active')) return;
+            this.gameState.timeLeft -= 1;
+            this.updateEndlessHud();
+            if (this.gameState.timeLeft <= 0) {
+                this.handleStoryTimeout();
+            }
+        }, 1000);
+    }
+
+    handleStoryTimeout() {
+        this.clearCombatTimer();
+        if (this.gameMode !== 'story' || this.gameState.gameOver || !this.gameState.timeLimit) return;
+
+        this.gameState.input = this.gameState.input.map((value, index) => this.gameState.hints.includes(index) ? value : null);
+        this.gameState.selectedSlot = this.getNextSelectableSlot(0);
+        if (window.audio) window.audio.playWarning ? window.audio.playWarning() : window.audio.playError();
+        this.showMessage('限時已到，這次調配被迫重置。', 'error');
+        this.updateGameUI();
+
+        setTimeout(() => {
+            if (!this.gameState.solved && !this.gameState.gameOver) this.startStoryTimer();
+        }, 250);
     }
 
     handleEndlessTimeout() {
@@ -3194,6 +3412,8 @@ class MagicAlchemyLab {
         this.gameState.hints = [];
         this.gameState.solved = false;
         this.gameState.levelData = levelData;
+        this.gameState.timeLimit = this.gameMode === 'story' && levelData?.timeLimit ? levelData.timeLimit : 0;
+        this.gameState.timeLeft = this.gameState.timeLimit || 0;
         this.gameState.selectedSlot = 0;
 
         // Setup visual slots dynamically
@@ -3217,6 +3437,7 @@ class MagicAlchemyLab {
         this.updateGameUI();
         requestAnimationFrame(() => this.updateLayoutMetrics());
         if (this.gameMode === 'endless') this.startEndlessTimer();
+        else if (this.gameMode === 'story' && this.gameState.timeLimit) this.startStoryTimer();
     }
 
     getNextSelectableSlot(startIndex = 0) {
@@ -3272,6 +3493,11 @@ class MagicAlchemyLab {
                 return slotCount <= this.symbols.length && uniqueCount === sequence.length && counts.every((count) => count === 1);
             case 'repeat-one':
                 return uniqueCount === sequence.length - 1 && counts[0] === 2 && counts.slice(1).every((count) => count === 1);
+            case 'triplet':
+                return slotCount >= 5
+                    && counts[0] === 3
+                    && uniqueCount === sequence.length - 2
+                    && counts.slice(1).every((count) => count === 1);
             case 'three-types':
                 return slotCount >= 3 && uniqueCount === 3 && counts.every((count) => count >= 1);
             case 'bookend':
@@ -3280,6 +3506,15 @@ class MagicAlchemyLab {
                     && counts[0] === 2
                     && uniqueCount === sequence.length - 1
                     && counts.slice(1).every((count) => count === 1);
+            case 'bookend-pair': {
+                const edge = sequence[0];
+                const map = this.getCountMap(sequence);
+                return slotCount >= 6
+                    && sequence[0] === sequence[sequence.length - 1]
+                    && map[edge] === 2
+                    && counts.filter((count) => count === 2).length === 2
+                    && counts.filter((count) => count === 1).length === sequence.length - 4;
+            }
             case 'twin-pairs':
                 return slotCount % 2 === 0 && uniqueCount === slotCount / 2 && counts.every((count) => count === 2);
             case 'split-pairs':
@@ -3301,6 +3536,10 @@ class MagicAlchemyLab {
                 return sequence.length === this.symbols.length + 1
                     && uniqueCount === this.symbols.length
                     && counts.join('|') === '2|1|1|1|1';
+            case 'spectrum-plus':
+                return sequence.length === this.symbols.length + 2
+                    && uniqueCount === this.symbols.length
+                    && counts.join('|') === '2|2|1|1|1';
             case 'palindrome':
                 return sequence.join('|') === [...sequence].reverse().join('|');
             case 'crown':
@@ -3365,6 +3604,11 @@ class MagicAlchemyLab {
                 const duplicate = singles[Math.floor(rng() * singles.length)];
                 return this.shuffleSequence([...singles, duplicate], rng);
             }
+            if (rule === 'triplet') {
+                const lead = r();
+                const singles = pickDistinct(slotCount - 3, ids.filter(id => id !== lead));
+                return this.shuffleSequence([lead, lead, lead, ...singles], rng);
+            }
             if (rule === 'three-types') {
                 return fillFromTypes(pickDistinct(3), slotCount);
             }
@@ -3372,6 +3616,11 @@ class MagicAlchemyLab {
                 const picks = pickDistinct(slotCount - 1);
                 const [edge, ...middle] = picks;
                 return [edge, ...this.shuffleSequence(middle, rng), edge];
+            }
+            if (rule === 'bookend-pair') {
+                const picks = pickDistinct(slotCount - 2);
+                const [edge, pair, ...middleSingles] = picks;
+                return [edge, ...this.shuffleSequence([pair, pair, ...middleSingles], rng), edge];
             }
             if (rule === 'twin-pairs') {
                 const pairTypes = pickDistinct(slotCount / 2);
@@ -3400,6 +3649,11 @@ class MagicAlchemyLab {
                 if (slotCount <= ids.length) return picked.slice(0, slotCount);
                 const bonus = picked[Math.floor(rng() * picked.length)];
                 return this.shuffleSequence([...picked, bonus], rng);
+            }
+            if (rule === 'spectrum-plus') {
+                const picked = pickDistinct(ids.length);
+                const bonuses = pickDistinct(2, picked);
+                return this.shuffleSequence([...picked, ...bonuses], rng);
             }
             if (rule === 'palindrome') {
                 const half = Array.from({ length: Math.ceil(slotCount / 2) }, () => r());
@@ -3536,6 +3790,7 @@ class MagicAlchemyLab {
             this.updateGameUI();
             if (this.gameState.mana <= 0) this.handleGameOver();
             else if (this.gameMode === 'endless') this.startEndlessTimer();
+            else if (this.gameMode === 'story' && this.gameState.timeLimit) this.startStoryTimer();
         }
     }
 

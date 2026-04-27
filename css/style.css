@@ -17,6 +17,8 @@
     --safe-right: env(safe-area-inset-right, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-left: env(safe-area-inset-left, 0px);
+    --runtime-safe-bottom: 0px;
+    --app-visible-height: 100dvh;
     --content-side-padding: clamp(16px, 4vw, 22px);
     --global-header-height: 112px;
     --game-header-height: 152px;
@@ -51,12 +53,8 @@ body {
     position: relative;
     width: 100%;
     max-width: 500px;
-    min-height: 100vh;
-    min-height: 100svh;
-    min-height: 100dvh;
-    height: 100vh;
-    height: 100svh;
-    height: 100dvh;
+    min-height: var(--app-visible-height);
+    height: var(--app-visible-height);
     margin: 0 auto;
     padding-left: var(--safe-left);
     padding-right: var(--safe-right);
@@ -2200,7 +2198,7 @@ img.portrait-client {
 #view-game.endless-battle #input-console {
     gap: 11px;
     padding-top: 13px;
-    padding-bottom: calc(var(--safe-bottom) + 13px);
+    padding-bottom: calc(max(var(--safe-bottom), var(--runtime-safe-bottom)) + 13px);
     border-radius: 26px 26px 0 0;
     background:
         linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255, 246, 237, 0.98));
@@ -2299,7 +2297,7 @@ img.portrait-client {
     flex-shrink: 0;
     margin-top: auto;
     background:rgba(255,255,255,0.9); border-top:var(--glass-border); padding:18px var(--content-side-padding); 
-    padding-bottom:calc(var(--safe-bottom) + 16px); border-radius:30px 30px 0 0; 
+    padding-bottom:calc(max(var(--safe-bottom), var(--runtime-safe-bottom)) + 16px); border-radius:30px 30px 0 0; 
     box-shadow:0 -10px 30px rgba(0,0,0,0.05); display:flex; flex-direction:column; gap:15px; 
     z-index: 10; backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
 }
@@ -2776,6 +2774,76 @@ img.portrait-client {
         padding: 7px 6px 8px;
     }
 
+    #view-game.endless-battle .game-header {
+        padding-top: calc(var(--safe-top) + 6px);
+        padding-bottom: 8px;
+    }
+
+    #view-game.endless-battle .header-main {
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+
+    #view-game.endless-battle .feedback-legend {
+        padding-top: 6px;
+        padding-bottom: 6px;
+    }
+
+    #view-game.endless-battle .feedback-legend span {
+        padding: 4px 7px;
+        font-size: 9px;
+    }
+
+    #view-game.endless-battle .combat-stage {
+        flex-basis: clamp(196px, 27dvh, 248px);
+        min-height: clamp(196px, 27dvh, 248px);
+        padding-bottom: 8px;
+    }
+
+    #view-game.endless-battle .combat-hp {
+        min-width: 108px;
+        padding: 7px 10px;
+    }
+
+    #view-game.endless-battle .combat-timer {
+        bottom: 4px;
+        width: min(76%, 248px);
+        padding: 7px 10px;
+    }
+
+    #view-game.endless-battle .combat-timer-label,
+    #view-game.endless-battle .combat-hp-label {
+        font-size: 11px;
+    }
+
+    #view-game.endless-battle .combat-player {
+        top: 24px;
+        width: 78px;
+    }
+
+    #view-game.endless-battle .combat-player .combat-portrait-frame {
+        height: 64px;
+    }
+
+    #view-game.endless-battle .combat-enemy {
+        top: 40px;
+        width: min(66%, 240px);
+    }
+
+    #view-game.endless-battle .combat-enemy .combat-portrait-frame {
+        height: clamp(76px, 11.5dvh, 102px);
+    }
+
+    #view-game.endless-battle .combat-enemy .combat-portrait-frame img {
+        max-height: clamp(92px, 13dvh, 120px);
+    }
+
+    #view-game.endless-battle #history-display {
+        min-height: 108px;
+        margin-top: 8px;
+        padding: 12px;
+    }
+
     #view-game.endless-battle .action-container {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2790,6 +2858,40 @@ img.portrait-client {
         line-height: 1.25;
         white-space: normal;
         overflow-wrap: anywhere;
+    }
+
+    #view-game.endless-battle #input-console {
+        gap: 8px;
+        padding-top: 10px;
+        padding-bottom: calc(max(var(--safe-bottom), var(--runtime-safe-bottom)) + 8px);
+    }
+
+    #view-game.endless-battle .cauldron-label {
+        font-size: 11px;
+    }
+
+    #view-game.endless-battle .slots-container {
+        padding: 10px 8px;
+        gap: 6px;
+    }
+
+    #view-game.endless-battle .slot {
+        width: clamp(40px, 10vw, 48px);
+    }
+
+    #view-game.endless-battle .palette-container {
+        padding: 0;
+    }
+
+    #view-game.endless-battle .token {
+        width: clamp(34px, 9vw, 42px);
+        height: clamp(34px, 9vw, 42px);
+    }
+
+    #view-game.endless-battle .btn {
+        min-height: 44px;
+        padding-top: 10px;
+        padding-bottom: 10px;
     }
 }
 
@@ -2911,8 +3013,8 @@ img.portrait-client {
         margin: 10px 16px 0;
     }
 
-    #view-game.endless-battle .action-container {
-        grid-template-columns: 1fr;
+    #view-game.endless-battle .action-container .btn {
+        font-size: 12px;
     }
 }
 

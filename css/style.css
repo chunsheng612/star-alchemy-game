@@ -361,7 +361,7 @@ body {
     right:0;
     display:grid;
     grid-template-columns:auto minmax(0, 1fr) auto;
-    grid-template-areas:"stats title back";
+    grid-template-areas:"back title stats";
     align-items:center;
     gap:12px;
     padding:calc(var(--safe-top) + 14px) var(--content-side-padding) 14px;
@@ -398,6 +398,7 @@ body {
     color: var(--color-accent);
     display:inline-flex;
     align-items:center;
+    z-index: 1000;
     justify-content:center;
     gap:6px;
     white-space:nowrap;
@@ -1002,6 +1003,8 @@ body {
     object-fit: contain;
     object-position: center bottom;
     filter: drop-shadow(0 18px 32px rgba(91, 58, 37, 0.22));
+    transform: scale(1.5);
+    transform-origin: center bottom;
 }
 .hero-bubble {
     position: relative;
@@ -2012,9 +2015,9 @@ img.portrait-client {
 }
 #view-game.endless-battle .combat-stage {
     position: relative;
-    flex: 0 0 clamp(160px, 24dvh, 210px);
-    min-height: clamp(160px, 24dvh, 210px);
-    max-height: 210px;
+    flex: 0 0 clamp(130px, 20dvh, 170px);
+    min-height: clamp(130px, 20dvh, 170px);
+    max-height: 170px;
     display: block;
     align-items: stretch;
     padding: 0 var(--content-side-padding) 12px;
@@ -2156,10 +2159,9 @@ img.portrait-client {
     background: transparent;
 }
 #view-game.endless-battle .combat-enemy .combat-portrait-frame img {
-    max-height: clamp(104px, 16dvh, 142px);
+    max-height: clamp(124px, 19.2dvh, 170px);
     filter: drop-shadow(0 18px 22px rgba(28, 20, 38, 0.35));
     animation: enemyBreathing 3s ease-in-out infinite;
-    transform: scale(0.95);
     transform-origin: bottom center;
 }
 #view-game.endless-battle .combat-enemy .combat-actor-meta {
@@ -2820,8 +2822,8 @@ img.portrait-client {
     }
 
     #view-game.endless-battle .combat-stage {
-        flex-basis: clamp(160px, 24dvh, 210px);
-        min-height: clamp(160px, 24dvh, 210px);
+        flex-basis: clamp(130px, 20dvh, 170px);
+        min-height: clamp(130px, 20dvh, 170px);
         padding-bottom: 8px;
     }
 

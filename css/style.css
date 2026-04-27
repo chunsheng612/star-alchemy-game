@@ -2072,12 +2072,12 @@ img.portrait-client {
     width: 100%;
     min-width: 0;
     gap: 6px;
-    margin-top: 2px;
-    padding: 6px 8px 8px;
-    border-radius: 0 0 18px 18px;
-    background: transparent;
-    box-shadow: none;
-    border-top: 1px solid rgba(0,0,0,0.06);
+    margin-top: 4px;
+    padding: 6px 8px;
+    border-radius: 12px;
+    background: rgba(255, 252, 248, 0.95);
+    box-shadow: 0 4px 10px rgba(43, 30, 42, 0.1);
+    border-top: none;
     z-index: 12;
 }
 #view-game.endless-battle .combat-hp-bar {
@@ -2085,8 +2085,8 @@ img.portrait-client {
 }
 #view-game.endless-battle .combat-timer {
     position: absolute;
-    top: 38px;
-    right: 4px;
+    top: 36px;
+    right: 0;
     left: auto;
     bottom: auto;
     width: auto;
@@ -2102,6 +2102,7 @@ img.portrait-client {
     display: flex;
     flex-direction: column;
     z-index: 12;
+    pointer-events: auto;
 }
 #view-game.endless-battle .combat-timer-label {
     font-size: 12px;
@@ -2135,18 +2136,22 @@ img.portrait-client {
 }
 #view-game.endless-battle .combat-enemy {
     position: absolute;
-    left: 50%;
-    top: 50px;
+    inset: 10px var(--content-side-padding) 12px;
     z-index: 10;
-    width: min(70%, 285px);
+    width: auto;
     border: none;
     background: transparent;
     box-shadow: none;
-    transform: translateX(-50%);
-    transform-origin: center bottom;
+    transform: none;
     overflow: visible;
+    pointer-events: none;
 }
 #view-game.endless-battle .combat-enemy .combat-portrait-frame {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(70%, 285px);
+    top: 40px;
     height: clamp(88px, 14dvh, 120px);
     background: transparent;
 }
@@ -2159,8 +2164,8 @@ img.portrait-client {
 }
 #view-game.endless-battle .combat-enemy .combat-actor-meta {
     position: absolute;
-    top: 4px;
-    right: 4px;
+    top: 0;
+    right: 0;
     width: auto;
     min-width: 120px;
     margin: 0;
@@ -2171,6 +2176,7 @@ img.portrait-client {
     border: var(--glass-border);
     border-bottom: none;
     z-index: 12;
+    pointer-events: auto;
 }
 #view-game.endless-battle .combat-enemy .combat-actor-meta strong {
     font-size: 11px;
@@ -2821,14 +2827,13 @@ img.portrait-client {
     }
 
     #view-game.endless-battle .combat-hp {
-        min-width: 108px;
-        padding: 7px 10px;
+        min-width: 100px;
+        padding: 5px 8px;
     }
 
     #view-game.endless-battle .combat-timer {
-        bottom: 4px;
-        width: min(76%, 248px);
-        padding: 7px 10px;
+        min-width: 110px;
+        padding: 5px 10px 8px;
     }
 
     #view-game.endless-battle .combat-timer-label,

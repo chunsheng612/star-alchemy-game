@@ -90,27 +90,24 @@
     }
 
     function updateAuthUI(user) {
-        if (!els.guest || !els.user) return;
+        window.currentUser = user || null;
 
         if (user) {
-            els.guest.classList.add("hidden");
-            els.user.classList.remove("hidden");
+            if (els.guest) els.guest.classList.add("hidden");
+            if (els.user) els.user.classList.remove("hidden");
             if (els.avatar) els.avatar.src = user.photoURL || "assets/icons/potion_blue.png";
             if (els.name) els.name.textContent = user.displayName || "已登入玩家";
             if (els.email) els.email.textContent = user.email || "";
-
-            window.currentUser = user;
-            if (window.app) {
-                window.app.currentUser = user;
-                if (typeof window.app.onAuthChanged === "function") window.app.onAuthChanged(user);
-            }
         } else {
-            els.guest.classList.remove("hidden");
-            els.user.classList.add("hidden");
-            window.currentUser = null;
-            if (window.app) {
-                window.app.currentUser = null;
-                if (typeof window.app.onAuthChanged === "function") window.app.onAuthChanged(null);
+            if (els.guest) els.guest.classList.remove("hidden");
+            if (els.user) els.user.classList.add("hidden");
+        }
+
+        // Always try to sync with app if it exists
+        if (window.app) {
+            window.app.currentUser = window.currentUser;
+            if (typeof window.app.onAuthChanged === "function") {
+                window.app.onAuthChanged(window.currentUser);
             }
         }
     }

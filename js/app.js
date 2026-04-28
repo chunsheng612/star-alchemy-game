@@ -1861,6 +1861,11 @@ class MagicAlchemyLab {
     }
 
     init() {
+        // Sync with existing auth state if firebase-auth.js finished early
+        if (window.currentUser) {
+            this.currentUser = window.currentUser;
+        }
+
         this.updateGlobalUI();
         this.renderMap();
         this.renderShop();
@@ -2941,6 +2946,17 @@ class MagicAlchemyLab {
                 this.showMessage('手動上傳失敗，請稍後再試。', 'error');
             }
         });
+
+        // Explicit fallback for settings login button in case global listener fails
+        const settingsLoginBtn = document.getElementById('btn-settings-login-google');
+        if (settingsLoginBtn) {
+            settingsLoginBtn.addEventListener('click', () => {
+                if (!this.currentUser && window.firebaseAuth?.loginWithGoogle) {
+                    if (window.audio) window.audio.playClick();
+                    window.firebaseAuth.loginWithGoogle();
+                }
+            });
+        }
 
         this.els.btnGlobalBack.addEventListener('click', (e) => {
             e.preventDefault();

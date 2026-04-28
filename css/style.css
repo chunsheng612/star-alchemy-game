@@ -60,7 +60,7 @@ body {
     padding-left: var(--safe-left);
     padding-right: var(--safe-right);
     display: flex;
-    flex-direction: column;
+    background-color: #fce8db; /* Solid fallback for PWA */
     background-image: url('../assets/bg_magic_lab.png');
     background-size: cover;
     background-position: center;
@@ -192,7 +192,7 @@ body {
     position: absolute; top: calc(var(--safe-top) + 18px); left: 50%; transform: translateX(-50%) translateY(-100px);
     background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
     color: #4db6ac; font-weight: 800; font-size: 14px; padding: 10px 20px; border-radius: 30px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1); z-index: 1000; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1); z-index: 7000; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     display: flex; align-items: center; gap: 8px; border: 1px solid #e0f2f1;
 }
 #save-toast.show { transform: translateX(-50%) translateY(0); }
@@ -365,12 +365,15 @@ body {
     align-items:center;
     gap:12px;
     padding:calc(var(--safe-top) + 14px) var(--content-side-padding) 14px;
-    background:rgba(255,255,255,0.72);
-    backdrop-filter:blur(16px);
-    -webkit-backdrop-filter:blur(16px);
+    background:#fff;
+    background:rgba(255,255,255,1.0); /* Fully opaque for Safari stability */
+    backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
     border-bottom:var(--glass-border);
-    z-index:50;
-    box-shadow:0 8px 18px rgba(0,0,0,0.08);
+    z-index:3000;
+    box-shadow:0 8px 25px rgba(0,0,0,0.1);
+    transform: translateZ(0); /* Force GPU layer */
+    -webkit-transform: translateZ(0);
 }
 .header-title {
     grid-area:title;
@@ -442,8 +445,11 @@ body {
     overflow-x:hidden;
     padding:calc(var(--safe-top) + 24px) 20px calc(var(--safe-bottom) + 20px);
     scroll-padding-bottom:calc(var(--safe-bottom) + 32px);
-    background:rgba(255,255,255,0.08);
+    background: #fdf6f0; /* Solid base to prevent bleed */
+    background:rgba(255,255,255,0.15);
     gap:16px;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
 }
 #view-hub .hub-content:not([data-active-panel="home"]):not(.home-screen) {
     padding-top: calc(var(--safe-top) + var(--global-header-height, 100px) + 8px) !important;
@@ -1801,8 +1807,8 @@ img.portrait-client {
 .buy-btn:disabled { background:#ccc; box-shadow:none; pointer-events:none;}
 
 /* Game */
-#view-game { position:relative; min-height:0; height:100%; max-height:100%; padding-bottom:var(--input-console-height); overflow:hidden; background:rgba(255,255,255,0.18); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
-.game-header { position:sticky; top:0; z-index:30; flex:0 0 auto; padding:calc(var(--safe-top) + 14px) var(--content-side-padding) 16px; background:rgba(255,255,255,0.82); border-bottom:var(--glass-border); box-shadow:0 8px 18px rgba(0,0,0,0.08); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
+#view-game { position:relative; min-height:0; height:100%; max-height:100%; padding-bottom:var(--input-console-height); overflow:hidden; background:#fce8db; transform: translateZ(0); -webkit-transform: translateZ(0); }
+.game-header { position:sticky; top:0; z-index:3000; flex:0 0 auto; padding:calc(var(--safe-top) + 14px) var(--content-side-padding) 16px; background:#fff; background:rgba(255,255,255,1.0); border-bottom:var(--glass-border); box-shadow:0 8px 25px rgba(0,0,0,0.1); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); transform: translateZ(0); -webkit-transform: translateZ(0); }
 .header-main { display:flex; align-items:center; gap:14px; margin-bottom:14px; }
 .quit-btn { background:white; border:none; min-height:46px; padding:10px 14px; border-radius:16px; font-weight:800; color:var(--color-error); box-shadow:var(--shadow-soft); white-space:nowrap; }
 .game-info { min-width:0; }
@@ -1991,7 +1997,8 @@ img.portrait-client {
 }
 #view-game.endless-battle .game-header {
     padding: calc(var(--safe-top) + 8px) var(--content-side-padding) 10px;
-    background: rgba(255, 252, 248, 0.9);
+    background: #fff;
+    background: rgba(255, 252, 248, 1.0);
 }
 #view-game.endless-battle .header-main {
     margin-bottom: 8px;
@@ -2395,7 +2402,7 @@ img.portrait-client {
 .btn-secondary.locked-hint { background:#ef476f; color:white; border:none; }
 
 /* Modals */
-.modal-overlay { position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(5px); display:flex; justify-content:center; align-items:center; padding:calc(var(--safe-top) + 12px) 14px calc(var(--safe-bottom) + 12px); opacity:0; pointer-events:none; z-index:900; transition:opacity 0.3s; }
+.modal-overlay { position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(5px); display:flex; justify-content:center; align-items:center; padding:calc(var(--safe-top) + 12px) 14px calc(var(--safe-bottom) + 12px); opacity:0; pointer-events:none; z-index:6000; transition:opacity 0.3s; }
 .modal-overlay.active { opacity:1; pointer-events:all; }
 .modal-panel { background:white; border-radius:30px; padding:30px 24px 24px; width:min(100%, 420px); max-height:100%; overflow-y:auto; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.2); transform:scale(0.9); transition:transform 0.3s; display:flex; flex-direction:column; gap:14px; }
 .modal-overlay.active .modal-panel { transform:scale(1); }
@@ -3573,10 +3580,11 @@ img.portrait-client {
     position: absolute !important;
     width: 90px;
     height: 90px;
-    z-index: 150;
+    z-index: 100; /* Lower than headers (3000) but above content */
     filter: drop-shadow(0 0 15px rgba(255,255,255,0.4));
     transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
     display: none;
+    pointer-events: none; /* Ensure it doesn't block clicks */
 }
 
 .battle-pet.active {

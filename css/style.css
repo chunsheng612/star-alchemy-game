@@ -35,6 +35,8 @@ html, body {
     font-family: var(--font-main);
     color: var(--color-text-main);
     overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: none; /* Prevent browser gestures */
     background:
         radial-gradient(circle at top, rgba(255, 226, 202, 0.92), rgba(252, 232, 219, 0) 46%),
         linear-gradient(180deg, #f6dfcf 0%, #fce8db 55%, #f4d9c8 100%);
@@ -48,6 +50,8 @@ body {
     justify-content: center;
     align-items: stretch;
     overscroll-behavior: none;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
 }
 
 #app-container {
@@ -65,6 +69,8 @@ body {
     background-size: cover;
     background-position: center;
     overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: pan-x pan-y; /* Allow internal scrolling but not body rubber-band */
     isolation: isolate;
     z-index: 2;
     box-shadow: 0 28px 90px rgba(105, 74, 48, 0.18);

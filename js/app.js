@@ -2942,11 +2942,10 @@ class MagicAlchemyLab {
             }
         });
 
-        this.els.btnGlobalBack.addEventListener('click', () => {
+        this.els.btnGlobalBack.addEventListener('click', (e) => {
+            e.preventDefault();
             if (window.audio) window.audio.playClick();
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(() => { });
-            }
+            
             if (this.viewState === 'hub' && this.activeHubPanel !== 'home') {
                 this.showHubPanel('home');
             } else {

@@ -1451,11 +1451,17 @@ class MagicAlchemyLab {
         Object.keys(mergedTitleLevels).forEach(k => {
             mergedTitleLevels[k] = Math.max(left.player?.titleLevels?.[k] || 0, right.player?.titleLevels?.[k] || 0);
         });
+        const mergedPets = new Set([
+            ...(left.player.ownedPets || []),
+            ...(right.player.ownedPets || [])
+        ]);
         merged.player = {
             selectedCharacter: preferred.player.selectedCharacter || fallback.player.selectedCharacter || 'female',
             unlockedTitles: [...mergedTitles],
             activeTitle: mergedTitles.has(preferred.player.activeTitle) ? preferred.player.activeTitle : 'apprentice',
-            titleLevels: mergedTitleLevels
+            titleLevels: mergedTitleLevels,
+            ownedPets: [...mergedPets],
+            activePet: mergedPets.has(preferred.player.activePet) ? preferred.player.activePet : (mergedPets.has(fallback.player.activePet) ? fallback.player.activePet : null)
         };
 
         merged.settings = {
